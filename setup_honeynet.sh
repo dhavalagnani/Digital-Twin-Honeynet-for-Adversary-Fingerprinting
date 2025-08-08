@@ -313,6 +313,28 @@ RestartSec=10
 [Install]
 WantedBy=multi-user.target
 EOF
+
+    # Cowrie log monitor service
+    cat > /etc/systemd/system/cowrie-monitor.service << EOF
+[Unit]
+Description=Cowrie Log Monitor
+After=network.target honeynet-api.service
+
+[Service]
+Type=simple
+User=$SUDO_USER
+WorkingDirectory=$HONEYNET_DIR
+Environment=PATH=$HONEYNET_DIR/venv/bin
+Environment=COWRIE_LOG_PATH=honeypot/logs/cowrie.json
+Environment=FASTAPI_URL=http://localhost:8000
+Environment=FASTAPI_PORT=8000
+ExecStart=$HONEYNET_DIR/venv/bin/python cowrie_log_monitor.py
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
+EOF
     
     # Reload systemd
     systemctl daemon-reload
@@ -321,6 +343,7 @@ EOF
     systemctl enable honeynet-api
     systemctl enable honeynet-monitor
     systemctl enable cowrie
+    systemctl enable cowrie-monitor
     
     log "Systemd services created and enabled"
 }
@@ -439,10 +462,12 @@ echo "Starting Digital Twin Honeynet..."
 systemctl start honeynet-api
 systemctl start honeynet-monitor
 systemctl start cowrie
+systemctl start cowrie-monitor
 
 echo "Honeynet services started"
 echo "Dashboard available at: http://localhost:8000"
 echo "HAProxy stats at: http://localhost:8404/stats"
+echo "Cowrie log monitor is running"
 EOF
     
     chmod +x "$HONEYNET_DIR/start_honeynet.sh"
@@ -460,6 +485,7 @@ echo "Stopping Digital Twin Honeynet..."
 systemctl stop honeynet-api
 systemctl stop honeynet-monitor
 systemctl stop cowrie
+systemctl stop cowrie-monitor
 
 echo "Honeynet services stopped"
 EOF
@@ -525,20 +551,25 @@ show_instructions() {
     echo "   Password: secure_password_2024"
     echo ""
     echo "4. Run attack simulations:"
-    echo "   cd $HONEYNET_DIR"
-    echo "   source venv/bin/activate"
-    echo "   python simulator/simulate_attacker1.py  # Legitimate access"
-    echo "   python simulator/simulate_attacker2.py  # Boundary value analysis"
-    echo "   python simulator/simulate_attacker3.py  # Timing anomalies"
-    echo "   python simulator/simulate_attacker4.py  # Brute force attacks"
+echo "   cd $HONEYNET_DIR"
+echo "   source venv/bin/activate"
+echo "   python simulator/simulate_attacker1.py  # Legitimate access"
+echo "   python simulator/simulate_attacker2.py  # Boundary value analysis"
+echo "   python simulator/simulate_attacker3.py  # Timing anomalies"
+echo "   python simulator/simulate_attacker4.py  # Brute force attacks"
+echo ""
+echo "5. Monitor Cowrie logs:"
+echo "   python cowrie_log_monitor.py --stats  # View statistics"
+echo "   python cowrie_log_monitor.py --test   # Test API connectivity"
     echo ""
-    echo "5. Stop the honeynet system:"
-    echo "   sudo $HONEYNET_DIR/stop_honeynet.sh"
+    echo "6. Stop the honeynet system:"
+echo "   sudo $HONEYNET_DIR/stop_honeynet.sh"
     echo ""
     echo "Log files:"
-    echo "  - System logs: $HONEYNET_DIR/logs/"
-    echo "  - Honeypot logs: $HONEYNET_DIR/honeypot/logs/"
-    echo "  - Setup log: $LOG_FILE"
+echo "  - System logs: $HONEYNET_DIR/logs/"
+echo "  - Honeypot logs: $HONEYNET_DIR/honeypot/logs/"
+echo "  - Cowrie monitor logs: $HONEYNET_DIR/logs/cowrie_monitor.log"
+echo "  - Setup log: $LOG_FILE"
     echo ""
     echo -e "${YELLOW}Important:${NC}"
     echo "  - This system is for educational and testing purposes only"
