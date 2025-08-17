@@ -1,0 +1,34 @@
+2025-08-17 12:22:05,100 - fingerprint_tester - INFO - Starting fingerprint tests
+2025-08-17 12:22:05,101 - fingerprint_tester - INFO - Tool availability: {'nmap': True, 'p0f': True}
+2025-08-17 12:22:05,110 - fingerprint_tester - INFO - Running mock nmap scan on localhost:80
+2025-08-17 12:22:05,111 - fingerprint_tester - INFO - Running mock p0f scan on localhost:80
+2025-08-17 12:22:05,112 - fingerprint_tester - INFO - Running mock p0f scan on production-server:80
+2025-08-17 12:22:05,112 - fingerprint_tester - INFO - Running mock nmap scan on production-server:80
+2025-08-17 12:22:05,113 - fingerprint_tester - INFO - Running mock nmap scan on localhost:443
+2025-08-17 12:22:05,113 - fingerprint_tester - INFO - Running mock p0f scan on production-server:443
+2025-08-17 12:22:05,114 - fingerprint_tester - INFO - Running mock nmap scan on production-server:443
+2025-08-17 12:22:05,114 - fingerprint_tester - INFO - Running mock p0f scan on localhost:443
+2025-08-17 12:22:05,114 - fingerprint_tester - INFO - Running mock nmap scan on localhost:22
+2025-08-17 12:22:05,128 - fingerprint_tester - INFO - Running mock p0f scan on localhost:22
+2025-08-17 12:22:05,128 - fingerprint_tester - INFO - Running mock nmap scan on production-server:22
+2025-08-17 12:22:05,128 - fingerprint_tester - INFO - Running mock p0f scan on production-server:22
+2025-08-17 12:22:05,129 - fingerprint_tester - INFO - Running mock nmap scan on localhost:2222
+2025-08-17 12:22:05,129 - fingerprint_tester - INFO - Running mock p0f scan on localhost:2222
+2025-08-17 12:22:05,129 - fingerprint_tester - INFO - Running mock nmap scan on production-server:2222
+2025-08-17 12:22:05,130 - fingerprint_tester - INFO - Running mock p0f scan on production-server:2222
+2025-08-17 12:22:05,130 - fingerprint_tester - INFO - Running mock nmap scan on localhost:3389
+2025-08-17 12:22:05,130 - fingerprint_tester - INFO - Running mock p0f scan on localhost:3389
+2025-08-17 12:22:05,131 - fingerprint_tester - INFO - Running mock nmap scan on production-server:3389
+2025-08-17 12:22:05,131 - fingerprint_tester - INFO - Running mock p0f scan on production-server:3389
+2025-08-17 12:22:05,131 - fingerprint_tester - INFO - Running mock nmap scan on localhost:445
+2025-08-17 12:22:05,132 - fingerprint_tester - INFO - Running mock p0f scan on localhost:445
+2025-08-17 12:22:05,132 - fingerprint_tester - INFO - Running mock nmap scan on production-server:445
+2025-08-17 12:22:05,133 - fingerprint_tester - INFO - Running mock p0f scan on production-server:445
+2025-08-17 12:22:05,133 - fingerprint_tester - INFO - Running mock nmap scan on localhost:139
+2025-08-17 12:22:05,135 - fingerprint_tester - INFO - Running mock p0f scan on production-server:139
+2025-08-17 12:22:05,134 - fingerprint_tester - INFO - Running mock nmap scan on production-server:139
+2025-08-17 12:22:05,133 - fingerprint_tester - INFO - Running mock p0f scan on localhost:139
+2025-08-17 12:22:05,139 - fingerprint_tester - INFO - Fingerprint tests completed: 14 honeypot, 14 production
+2025-08-17 12:22:05,144 - fingerprint_tester - INFO - Comparing fingerprints
+2025-08-17 12:22:05,145 - fingerprint_tester - INFO - Fingerprint comparison completed: 7 comparisons
+2025-08-17 12:22:05,160 - fingerprint_tester - INFO - Test report generated: logs/fingerprint_test_report_20250817_122205.json

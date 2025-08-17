@@ -1,0 +1,622 @@
+# Digital Twin Honeynet - Central Configuration
+# This file centralizes all honeypot protocol configurations, network parameters,
+# and routing rules for the entire honeynet system.
+
+# Global system configuration
+system:
+  name: "Digital Twin Honeynet"
+  version: "1.0.0"
+  environment: "production" # production, staging, development
+  debug: false
+  log_level: "INFO"
+
+  # Network configuration
+  network:
+    # Default network interface
+    interface: "eth0"
+    # Internal network subnet
+    subnet: "172.20.0.0/16"
+    # Gateway IP
+    gateway: "172.20.0.1"
+    # DNS servers
+    dns_servers:
+      - "8.8.8.8"
+      - "8.8.4.4"
+
+# Protocol configuration - defines which protocols are enabled and their settings
+protocols:
+  # HTTP/HTTPS protocol
+  http:
+    enabled: true
+    ports:
+      - 80
+      - 443
+    honeypot_port: 8080
+    production_port: 80
+    router_port: 80
+
+    # Banner configuration
+    banner:
+      server: "nginx/1.18.0 (Ubuntu)"
+      x_powered_by: "PHP/7.4.3"
+      content_type: "text/html; charset=UTF-8"
+      date_format: "%a, %d %b %Y %H:%M:%S GMT"
+      security_headers:
+        X-Content-Type-Options: "nosniff"
+        X-Frame-Options: "SAMEORIGIN"
+        X-XSS-Protection: "1; mode=block"
+        Strict-Transport-Security: "max-age=31536000; includeSubDomains"
+        Content-Security-Policy: "default-src 'self'"
+
+    # Response timing for stealth
+    response_timing:
+      enabled: true
+      base_delay: 0.1
+      jitter_range: 0.05
+      min_delay: 0.05
+      max_delay: 0.3
+      connection_variation: true
+      path_based_timing:
+        enabled: true
+        admin_delay_multiplier: 1.5
+        static_delay_multiplier: 0.5
+
+  # SSH protocol (Cowrie)
+  ssh:
+    enabled: true
+    ports:
+      - 22
+      - 2222
+    honeypot_port: 2222
+    production_port: 22
+
+    # Banner configuration
+    banner:
+      server: "SSH-2.0-OpenSSH_8.2p1 Ubuntu-4ubuntu0.5"
+      randomization_enabled: false
+      alternative_banners:
+        - "SSH-2.0-OpenSSH_7.9p1 Debian-10+deb10u2"
+        - "SSH-2.0-OpenSSH_8.1p1 FreeBSD-20200314"
+        - "SSH-2.0-OpenSSH_7.4p1 CentOS-7"
+
+    # Response timing for stealth
+    response_timing:
+      enabled: true
+      base_delay: 0.05
+      jitter_range: 0.02
+      min_delay: 0.02
+      max_delay: 0.15
+      connection_variation: true
+
+  # RDP protocol
+  rdp:
+    enabled: true
+    ports:
+      - 3389
+    honeypot_port: 3389
+    production_port: 3389
+
+    # Banner configuration
+    banner:
+      server_name: "Windows Server 2019"
+      version_string: "RDP 8.1"
+      build_number: 17763
+      randomization_enabled: false
+      alternative_banners:
+        - "Windows Server 2016"
+        - "Windows Server 2022"
+        - "Windows 10 Pro"
+        - "Windows 11 Pro"
+        - "Windows Server 2012 R2"
+
+    # Protocol settings
+    protocol:
+      supported_protocols: ["RDP", "SSL/TLS"]
+      encryption_levels: ["Low", "Medium", "High"]
+      authentication_methods: ["NTLM", "Kerberos"]
+      credssp_enabled: true
+      nla_enabled: true
+      smart_card_enabled: false
+      credential_guard_enabled: false
+
+    # Response timing for stealth
+    response_timing:
+      enabled: true
+      base_delay: 0.1
+      jitter_range: 0.05
+      min_delay: 0.05
+      max_delay: 0.3
+      connection_variation: true
+
+  # SMB protocol
+  smb:
+    enabled: true
+    ports:
+      - 445
+      - 139
+    honeypot_port: 445
+    production_port: 445
+
+    # Banner configuration
+    banner:
+      server_name: "Windows Server 2019"
+      version_string: "SMB 3.1.1"
+      build_number: 17763
+      randomization_enabled: false
+      alternative_banners:
+        - "Windows Server 2016"
+        - "Windows Server 2022"
+        - "Windows 10 Pro"
+        - "Windows 11 Pro"
+        - "Windows Server 2012 R2"
+
+    # Protocol settings
+    protocol:
+      supported_versions: ["SMB1", "SMB2", "SMB3"]
+      encryption_levels: ["None", "AES-128-GCM", "AES-256-GCM"]
+      authentication_methods: ["NTLM", "Kerberos"]
+      signing_required: false
+      encryption_required: false
+      compression_enabled: true
+      multichannel_enabled: true
+      smb_direct_enabled: false
+
+    # Share configuration
+    shares:
+      enabled: true
+      default_shares: ["C$", "IPC$", "ADMIN$"]
+      custom_shares: []
+      share_access: "readonly"
+      permissions:
+        read: true
+        write: false
+        execute: false
+        delete: false
+      comments:
+        C$: "Default share"
+        IPC$: "Remote IPC"
+        ADMIN$: "Remote Admin"
+      paths:
+        C$: "/tmp/smb_c"
+        IPC$: "/tmp/smb_ipc"
+        ADMIN$: "/tmp/smb_admin"
+
+    # Response timing for stealth
+    response_timing:
+      enabled: true
+      base_delay: 0.1
+      jitter_range: 0.05
+      min_delay: 0.05
+      max_delay: 0.3
+      connection_variation: true
+
+# Network fingerprinting parameters for stealth
+network_fingerprinting:
+  enabled: true
+
+  # TCP/IP stack randomization
+  tcp_randomization:
+    enabled: true
+    # TCP Window Size configuration
+    window_size:
+      base: 65535
+      variation: 0.1 # ±10% variation
+      min: 4096
+      max: 131072
+
+    # TTL (Time To Live) configuration
+    ttl:
+      base: 64
+      variation: 0.15 # ±15% variation
+      min: 32
+      max: 128
+
+    # MSS (Maximum Segment Size) configuration
+    mss:
+      base: 1460
+      variation: 0.05 # ±5% variation
+      min: 536
+      max: 1460
+
+    # Timing configuration
+    timing:
+      base_response_delay: 0.05
+      jitter_range: [0.02, 0.05]
+      min_delay: 0.01
+      max_delay: 0.15
+
+  # Production server fingerprint (used when randomization is disabled)
+  production_fingerprint:
+    window_size: 65535
+    ttl: 64
+    mss: 1460
+    response_delay: 0.03
+
+# Access control lists
+access_control:
+  # Whitelist configuration
+  whitelist:
+    enabled: true
+    # IP addresses/networks to whitelist
+    ips:
+      - "127.0.0.1"
+      - "192.168.1.0/24"
+      - "10.0.0.0/8"
+      - "172.16.0.0/12"
+      - "172.17.0.0/16" # Legacy network (removed Docker reference)
+      - "172.20.0.0/16" # Honeynet network
+
+    # User agents to whitelist
+    user_agents:
+      - "legitimate-bot"
+      - "monitoring-agent"
+      - "health-check"
+      - "uptime-robot"
+      - "pingdom"
+      - "newrelic"
+      - "datadog"
+      - "prometheus"
+
+    # Request patterns to whitelist
+    patterns:
+      - "/health"
+      - "/status"
+      - "/ping"
+      - "/favicon.ico"
+      - "/robots.txt"
+      - "/sitemap.xml"
+      - "/api/health"
+      - "/api/status"
+
+    # HTTP methods to whitelist
+    methods:
+      - "GET"
+      - "HEAD"
+      - "OPTIONS"
+
+  # Blacklist configuration
+  blacklist:
+    enabled: true
+    # IP addresses to blacklist
+    ips:
+      - "192.168.1.200" # Example blacklisted IP
+
+    # User agents to blacklist (attack tools)
+    user_agents:
+      - "sqlmap"
+      - "nikto"
+      - "nmap"
+      - "dirb"
+      - "gobuster"
+      - "wfuzz"
+      - "burp"
+      - "zap"
+      - "acunetix"
+      - "nessus"
+      - "openvas"
+      - "metasploit"
+      - "hydra"
+      - "medusa"
+
+    # Request patterns to blacklist
+    patterns:
+      - "admin"
+      - "wp-admin"
+      - "phpmyadmin"
+      - "config"
+      - "backup"
+      - ".env"
+      - ".git"
+      - ".svn"
+      - ".htaccess"
+      - "wp-config"
+      - "database"
+      - "mysql"
+      - "sql"
+      - "shell"
+      - "cmd"
+      - "exec"
+      - "system"
+      - "eval"
+      - "base64"
+      - "union"
+      - "select"
+      - "insert"
+      - "update"
+      - "delete"
+      - "drop"
+      - "create"
+      - "alter"
+
+# Attack detection patterns
+attack_patterns:
+  # SQL injection patterns
+  sql_injection:
+    - "union select"
+    - "drop table"
+    - "insert into"
+    - "delete from"
+    - "update set"
+    - "or 1=1"
+    - "or '1'='1"
+    - "'; drop table"
+    - "'; insert into"
+
+  # XSS patterns
+  xss:
+    - "<script"
+    - "javascript:"
+    - "onload="
+    - "onerror="
+    - "onclick="
+    - "onmouseover="
+    - "alert("
+    - "confirm("
+    - "prompt("
+
+  # Path traversal patterns
+  path_traversal:
+    - "../"
+    - "..\\"
+    - "....//"
+    - "....\\\\"
+    - "etc/passwd"
+    - "etc/shadow"
+    - "windows/system32"
+    - "proc/self"
+
+  # File inclusion patterns
+  file_inclusion:
+    - "include("
+    - "require("
+    - "include_once("
+    - "require_once("
+    - "file_get_contents("
+    - "fopen("
+
+  # Command injection patterns
+  command_injection:
+    - "; ls"
+    - "; cat"
+    - "; whoami"
+    - "; id"
+    - "| ls"
+    - "| cat"
+    - "`ls`"
+    - "$(ls)"
+
+  # Brute force detection
+  brute_force:
+    enabled: true
+    failed_attempts_threshold: 5
+    time_window: 300
+    block_duration: 3600
+
+  # Protocol violations
+  protocol_violations:
+    enabled: true
+    invalid_versions: []
+    malformed_packets: true
+
+  # Scanning detection
+  scanning:
+    enabled: true
+    rapid_connections: true
+    connection_threshold: 10
+    time_window: 60
+
+# Logging configuration
+logging:
+  enabled: true
+  # Standard log file
+  log_file: "logs/honeynet.log"
+  # JSON structured log file
+  json_log_file: "logs/honeynet.json"
+  # Log level
+  level: "INFO"
+  # Log rotation settings
+  rotation:
+    max_size: "10MB"
+    backup_count: 5
+  # Log specific events
+  events:
+    log_requests: true
+    log_responses: true
+    log_errors: true
+    log_attacks: true
+    log_whitelisted: false
+    log_blacklisted: true
+    log_routing_decisions: true
+    log_connections: true
+    log_handshakes: true
+    log_authentication_attempts: true
+    log_share_access: true
+    log_file_operations: true
+
+# Performance settings
+performance:
+  # Enable request caching
+  caching: false
+  # Cache size limit
+  cache_size: 1000
+  # Cache TTL (seconds)
+  cache_ttl: 300
+  # Enable compression
+  compression: true
+  # Connection pooling
+  connection_pooling: true
+  # Pool size
+  pool_size: 10
+  # Pool timeout
+  pool_timeout: 30
+  # Rate limiting
+  rate_limiting:
+    enabled: true
+    requests_per_minute: 100
+    burst_size: 20
+    window: 60
+  # Memory limits
+  memory_limit: "100MB"
+  # CPU limits
+  cpu_limit: 50
+
+# Security settings
+security:
+  # Enable request validation
+  request_validation: true
+  # Maximum request size (bytes)
+  max_request_size: 10485760 # 10MB
+  # Maximum URL length
+  max_url_length: 2048
+  # Block suspicious user agents
+  block_suspicious_ua: true
+  # Block requests with suspicious headers
+  block_suspicious_headers: true
+  # Suspicious headers
+  suspicious_headers:
+    - "X-Forwarded-For"
+    - "X-Real-IP"
+    - "X-Originating-IP"
+    - "X-Remote-IP"
+    - "X-Remote-Addr"
+    - "X-Client-IP"
+    - "X-Host"
+    - "X-Forwarded-Server"
+    - "X-HTTP-Host-Override"
+    - "Forwarded"
+  # Suspicious user agents
+  suspicious_user_agents:
+    - "sqlmap"
+    - "nikto"
+    - "nmap"
+    - "dirb"
+    - "gobuster"
+    - "wfuzz"
+    - "burp"
+    - "zap"
+
+# Integration settings
+integration:
+  # Integrate with existing logging pipeline
+  logging_pipeline: true
+  # Send alerts to monitoring system
+  alerting: true
+  # Integration with Cowrie logs
+  cowrie_integration: true
+  # Shared log format
+  shared_log_format: true
+  # Integration with other honeypots
+  honeypot_integration: true
+
+# Monitoring and alerting
+monitoring:
+  # Enable health checks
+  health_checks: true
+  # Health check interval (seconds)
+  health_check_interval: 30
+  # Metrics collection
+  metrics:
+    enabled: true
+    # Metrics endpoint
+    endpoint: "/metrics"
+    # Metrics format (prometheus, json)
+    format: "prometheus"
+  # Alerting
+  alerting:
+    enabled: false
+    # Alert thresholds
+    thresholds:
+      # High connection rate (connections per second)
+      high_connection_rate: 10
+      # High failed authentication rate (percentage)
+      high_failed_auth_rate: 50
+      # High error rate (percentage)
+      high_error_rate: 10
+      # High request rate (requests per second)
+      high_request_rate: 100
+      # High blacklist rate (percentage)
+      high_blacklist_rate: 50
+
+# Service management
+services:
+  # Service startup order
+  startup_order:
+    - "database"
+    - "redis"
+    - "log-monitor"
+    - "http-honeypot"
+    - "ssh-honeypot"
+    - "rdp-honeypot"
+    - "smb-honeypot"
+    - "http-router"
+    - "api-backend"
+    - "haproxy"
+
+  # Service dependencies
+  dependencies:
+    http-router:
+      - "http-honeypot"
+      - "production-server"
+    api-backend:
+      - "log-monitor"
+    log-monitor:
+      - "http-honeypot"
+      - "ssh-honeypot"
+      - "rdp-honeypot"
+      - "smb-honeypot"
+    haproxy:
+      - "http-router"
+
+  # Health check endpoints
+  health_checks:
+    http-honeypot: "http://localhost:8080/health"
+    ssh-honeypot: "tcp://localhost:2222"
+    rdp-honeypot: "tcp://localhost:3389"
+    smb-honeypot: "tcp://localhost:445"
+    http-router: "http://localhost:80/health"
+    api-backend: "http://localhost:8000/health"
+    database: "tcp://localhost:5432"
+    redis: "tcp://localhost:6379"
+
+# Validation rules
+validation:
+  # Required files
+  required_files:
+    - "honeypots/http_honeypot.py"
+    - "honeypots/rdp_honeypot.py"
+    - "honeypots/smb_honeypot.py"
+    - "honeypots/http_router.py"
+    - "logs/cowrie_log_monitor.py"
+    - "backend/main.py"
+
+  # Required directories
+  required_directories:
+    - "honeypots"
+    - "logs"
+    - "backend"
+    - "router"
+    - "utils"
+
+  # Port validation
+  port_validation:
+    # Check for port conflicts
+    check_conflicts: true
+    # Reserved ports (should not be used)
+    reserved_ports:
+      - 22
+      - 80
+      - 443
+      - 3389
+      - 445
+    # Allowed port ranges
+    allowed_ranges:
+      - [1024, 65535] # User ports
+
+  # Network validation
+  network_validation:
+    # Check network connectivity
+    check_connectivity: true
+    # Check DNS resolution
+    check_dns: true
+    # Check firewall rules
+    check_firewall: true

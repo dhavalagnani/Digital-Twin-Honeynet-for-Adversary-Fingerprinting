@@ -1,0 +1,62 @@
+# Digital Twin Honeynet - TCP/IP Stack Randomization Configuration
+# This file configures network parameter variations to reduce fingerprinting risk
+
+# Enable/disable TCP/IP stack randomization
+enabled: true
+
+# Timing configuration for response delays
+timing:
+  # Base response delay in seconds (50ms)
+  base_response_delay: 0.05
+
+  # Jitter range in seconds (±20-50ms)
+  jitter_range: [0.02, 0.05]
+
+  # Minimum and maximum delay bounds
+  min_delay: 0.01 # 10ms minimum
+  max_delay: 0.15 # 150ms maximum
+
+# Network parameter variations
+network_params:
+  # TCP Window Size configuration
+  window_size:
+    base: 65535 # Base window size
+    variation: 0.1 # ±10% variation
+    min: 4096 # Minimum window size
+    max: 131072 # Maximum window size
+
+  # TTL (Time To Live) configuration
+  ttl:
+    base: 64 # Base TTL value
+    variation: 0.15 # ±15% variation
+    min: 32 # Minimum TTL
+    max: 128 # Maximum TTL
+
+  # MSS (Maximum Segment Size) configuration
+  mss:
+    base: 1460 # Base MSS value
+    variation: 0.05 # ±5% variation
+    min: 536 # Minimum MSS
+    max: 1460 # Maximum MSS
+
+# Production server fingerprint (used when randomization is disabled)
+production_fingerprint:
+  window_size: 65535 # Production window size
+  ttl: 64 # Production TTL
+  mss: 1460 # Production MSS
+  response_delay: 0.03 # Production response delay (30ms)
+
+# Advanced settings
+advanced:
+  # Seed for reproducible randomization (set to null for random)
+  random_seed: null
+
+  # Logging level for randomization events
+  log_level: "INFO"
+
+  # Enable/disable specific randomization features
+  features:
+    timing_randomization: true
+    window_size_randomization: true
+    ttl_randomization: true
+    mss_randomization: true

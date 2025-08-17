@@ -1,0 +1,294 @@
+# Digital Twin Honeynet - SMB Honeypot Configuration
+# Configuration for SMB service emulation and production server mimicry
+
+# Server configuration
+server:
+  host: 0.0.0.0
+  port: 445
+  max_connections: 50
+  timeout: 30
+  # Enable SMB signing
+  signing_enabled: true
+  # Enable SMB encryption
+  encryption_enabled: true
+
+# Production server configuration
+production_server:
+  host: production-server
+  port: 445
+  version: SMB 3.1.1
+  build: 17763
+  # Production server fingerprint
+  fingerprint:
+    server_name: Windows Server 2019
+    version_string: SMB 3.1.1
+    build_number: 17763
+    supported_versions: [SMB1, SMB2, SMB3]
+    encryption_levels: [None, AES-128-GCM, AES-256-GCM]
+    authentication_methods: [NTLM, Kerberos]
+
+# Banner configuration for production mimicry
+banner:
+  # Server name to display
+  server_name: Windows Server 2019
+  # SMB version string
+  version_string: SMB 3.1.1
+  # Build number
+  build_number: 17763
+  # Enable banner randomization
+  randomization_enabled: false
+  # Alternative banners for randomization
+  alternative_banners:
+    - Windows Server 2016
+    - Windows Server 2022
+    - Windows 10 Pro
+    - Windows 11 Pro
+    - Windows Server 2012 R2
+
+# Protocol configuration
+protocol:
+  # Supported SMB versions
+  supported_versions:
+    - SMB1
+    - SMB2
+    - SMB3
+  # Encryption levels supported
+  encryption_levels:
+    - None
+    - AES-128-GCM
+    - AES-256-GCM
+  # Authentication methods
+  authentication_methods:
+    - NTLM
+    - Kerberos
+  # Enable SMB signing
+  signing_required: false
+  # Enable SMB encryption
+  encryption_required: false
+  # Enable SMB compression
+  compression_enabled: true
+  # Enable SMB multichannel
+  multichannel_enabled: true
+  # Enable SMB direct
+  smb_direct_enabled: false
+
+# Share configuration
+shares:
+  enabled: true
+  # Default Windows shares
+  default_shares:
+    - C$
+    - IPC$
+    - ADMIN$
+  # Custom shares
+  custom_shares: []
+  # Share access level
+  share_access: readonly
+  # Share permissions
+  permissions:
+    read: true
+    write: false
+    execute: false
+    delete: false
+  # Share comments
+  comments:
+    C$: "Default share"
+    IPC$: "Remote IPC"
+    ADMIN$: "Remote Admin"
+  # Share paths (for Impacket)
+  paths:
+    C$: /tmp/smb_c
+    IPC$: /tmp/smb_ipc
+    ADMIN$: /tmp/smb_admin
+
+# Response timing configuration for stealth
+response_timing:
+  enabled: true
+  # Base delay before sending response (seconds)
+  base_delay: 0.1
+  # Jitter range for randomization (±seconds)
+  jitter_range: 0.05
+  # Minimum delay (seconds)
+  min_delay: 0.05
+  # Maximum delay (seconds)
+  max_delay: 0.3
+  # Enable connection-specific delay variation
+  connection_variation: true
+
+# Logging configuration
+logging:
+  enabled: true
+  # Standard log file
+  log_file: honeypot/smb_honeypot.log
+  # JSON structured log file
+  json_log_file: honeypot/smb_honeypot.json
+  # Log level
+  level: INFO
+  # Log rotation settings
+  rotation:
+    max_size: 10MB
+    backup_count: 5
+  # Log specific events
+  events:
+    log_connections: true
+    log_handshakes: true
+    log_authentication_attempts: true
+    log_share_access: true
+    log_file_operations: true
+    log_errors: true
+
+# Security settings
+security:
+  # Maximum request size (bytes)
+  max_request_size: 1048576 # 1MB
+  # Rate limiting
+  rate_limiting:
+    enabled: true
+    # Requests per minute per IP
+    requests_per_minute: 100
+    # Burst size
+    burst_size: 20
+    # Rate limit window (seconds)
+    window: 60
+  # Connection limits
+  connection_limits:
+    max_connections_per_ip: 5
+    max_failed_attempts: 10
+    block_duration: 3600 # 1 hour
+  # IP blacklist
+  blacklist:
+    enabled: true
+    ips: []
+    # Auto-blacklist suspicious IPs
+    auto_blacklist: true
+    # Suspicious patterns
+    suspicious_patterns:
+      - rapid_connections
+      - failed_authentication
+      - protocol_violations
+      - share_enumeration
+
+# Performance settings
+performance:
+  # Enable connection pooling
+  connection_pooling: true
+  # Pool size
+  pool_size: 10
+  # Pool timeout
+  pool_timeout: 30
+  # Enable compression
+  compression: true
+  # Memory limits
+  memory_limit: 100MB
+  # CPU limits
+  cpu_limit: 50
+
+# Integration settings
+integration:
+  # Integrate with existing logging pipeline
+  logging_pipeline: true
+  # Send alerts to monitoring system
+  alerting: true
+  # Integration with other honeypots
+  honeypot_integration: true
+  # Shared log format
+  shared_log_format: true
+  # Integration with Cowrie logs
+  cowrie_integration: true
+
+# Monitoring and alerting
+monitoring:
+  # Enable health checks
+  health_checks: true
+  # Health check interval (seconds)
+  health_check_interval: 30
+  # Metrics collection
+  metrics:
+    enabled: true
+    # Metrics endpoint
+    endpoint: /metrics
+    # Metrics format (prometheus, json)
+    format: prometheus
+  # Alerting
+  alerting:
+    enabled: false
+    # Alert thresholds
+    thresholds:
+      # High connection rate (connections per second)
+      high_connection_rate: 10
+      # High failed authentication rate (percentage)
+      high_failed_auth_rate: 50
+      # High error rate (percentage)
+      high_error_rate: 10
+
+# Attack detection patterns
+attack_patterns:
+  # Brute force detection
+  brute_force:
+    enabled: true
+    # Failed attempts threshold
+    failed_attempts_threshold: 5
+    # Time window (seconds)
+    time_window: 300
+    # Block duration (seconds)
+    block_duration: 3600
+  # Protocol violations
+  protocol_violations:
+    enabled: true
+    # Invalid protocol versions
+    invalid_versions: []
+    # Malformed packets
+    malformed_packets: true
+  # Scanning detection
+  scanning:
+    enabled: true
+    # Rapid connection attempts
+    rapid_connections: true
+    # Connection threshold
+    connection_threshold: 10
+    # Time window (seconds)
+    time_window: 60
+  # Share enumeration
+  share_enumeration:
+    enabled: true
+    # Enumeration threshold
+    enumeration_threshold: 5
+    # Time window (seconds)
+    time_window: 300
+  # File access patterns
+  file_access:
+    enabled: true
+    # Suspicious file patterns
+    suspicious_patterns:
+      - "*.exe"
+      - "*.bat"
+      - "*.ps1"
+      - "*.vbs"
+      - "*.js"
+    # Access threshold
+    access_threshold: 10
+    # Time window (seconds)
+    time_window: 300
+
+# SMB-specific settings
+smb:
+  # Enable SMB1 (deprecated but still targeted)
+  smb1_enabled: true
+  # Enable SMB2
+  smb2_enabled: true
+  # Enable SMB3
+  smb3_enabled: true
+  # SMB dialect negotiation
+  dialect_negotiation: true
+  # SMB session limits
+  session_limits:
+    max_sessions: 100
+    max_sessions_per_user: 10
+  # SMB tree limits
+  tree_limits:
+    max_trees: 50
+    max_trees_per_session: 5
+  # SMB file limits
+  file_limits:
+    max_files: 1000
+    max_files_per_share: 100

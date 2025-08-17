@@ -1,0 +1,261 @@
+# Digital Twin Honeynet - HTTP Router Configuration
+# Configuration for routing HTTP traffic between honeypot and production server
+
+# Router server configuration
+router:
+  host: 0.0.0.0
+  port: 80
+  debug: false
+  threaded: true
+  # Maximum concurrent connections
+  max_connections: 200
+  # Connection timeout (seconds)
+  timeout: 30
+
+# Honeypot server configuration
+honeypot:
+  host: localhost
+  port: 8080
+  scheme: http
+  # Internal honeypot address (for native networking)
+  internal_host: localhost
+  internal_port: 8080
+
+# Production server configuration
+production:
+  host: 192.168.1.100
+  port: 80
+  scheme: http
+  # Internal production address (for native networking)
+  internal_host: localhost
+  internal_port: 80
+  # Health check endpoint
+  health_check: /health
+  # Connection timeout for production forwarding
+  timeout: 30
+
+# Whitelist configuration for legitimate traffic
+whitelist:
+  enabled: true
+  # IP addresses/networks to whitelist
+  ips:
+    - 127.0.0.1
+    - 192.168.1.0/24
+    - 10.0.0.0/8
+    - 172.16.0.0/12
+    - 172.17.0.0/16 # Legacy network (removed Docker reference)
+  # User agents to whitelist
+  user_agents:
+    - legitimate-bot
+    - monitoring-agent
+    - health-check
+    - uptime-robot
+    - pingdom
+    - newrelic
+    - datadog
+    - prometheus
+  # Request paths to whitelist
+  paths:
+    - /health
+    - /status
+    - /ping
+    - /favicon.ico
+    - /robots.txt
+    - /sitemap.xml
+    - /api/health
+    - /api/status
+  # HTTP methods to whitelist
+  methods:
+    - GET
+    - HEAD
+    - OPTIONS
+
+# Blacklist configuration for suspicious traffic
+blacklist:
+  enabled: true
+  # IP addresses to blacklist
+  ips:
+    - 192.168.1.200 # Example blacklisted IP
+  # User agents to blacklist (attack tools)
+  user_agents:
+    - sqlmap
+    - nikto
+    - nmap
+    - dirb
+    - gobuster
+    - wfuzz
+    - burp
+    - zap
+    - acunetix
+    - nessus
+    - openvas
+    - metasploit
+    - hydra
+    - medusa
+  # Request patterns to blacklist
+  patterns:
+    - admin
+    - wp-admin
+    - phpmyadmin
+    - config
+    - backup
+    - .env
+    - .git
+    - .svn
+    - .htaccess
+    - wp-config
+    - database
+    - mysql
+    - sql
+    - shell
+    - cmd
+    - exec
+    - system
+    - eval
+    - base64
+    - union
+    - select
+    - insert
+    - update
+    - delete
+    - drop
+    - create
+    - alter
+
+# Traffic analysis and routing rules
+routing:
+  # Enable intelligent routing based on request analysis
+  intelligent_routing: true
+  # Default action for unclassified requests
+  default_action: honeypot # honeypot, production, or analyze
+  # Request analysis settings
+  analysis:
+    # Check for SQL injection patterns
+    check_sql_injection: true
+    # Check for XSS patterns
+    check_xss: true
+    # Check for path traversal
+    check_path_traversal: true
+    # Check for command injection
+    check_command_injection: true
+    # Check for file inclusion
+    check_file_inclusion: true
+    # Check for suspicious headers
+    check_suspicious_headers: true
+    # Check for unusual request patterns
+    check_unusual_patterns: true
+  # Rate limiting settings
+  rate_limiting:
+    enabled: true
+    # Requests per minute per IP
+    requests_per_minute: 100
+    # Burst size
+    burst_size: 20
+    # Rate limit window (seconds)
+    window: 60
+
+# Logging configuration
+logging:
+  enabled: true
+  # Log file for router operations
+  log_file: honeypot/router.log
+  # JSON log file for structured logging
+  json_log_file: honeypot/router.json
+  # Log level
+  level: INFO
+  # Log specific events
+  events:
+    log_requests: true
+    log_routing_decisions: true
+    log_errors: true
+    log_blacklisted: true
+    log_whitelisted: false
+  # Log rotation settings
+  rotation:
+    max_size: 10MB
+    backup_count: 5
+
+# Performance settings
+performance:
+  # Enable request caching
+  caching: false
+  # Cache size limit
+  cache_size: 1000
+  # Cache TTL (seconds)
+  cache_ttl: 300
+  # Enable compression
+  compression: true
+  # Connection pooling
+  connection_pooling: true
+  # Pool size
+  pool_size: 10
+  # Pool timeout
+  pool_timeout: 30
+
+# Security settings
+security:
+  # Enable request validation
+  request_validation: true
+  # Maximum request size (bytes)
+  max_request_size: 10485760 # 10MB
+  # Maximum URL length
+  max_url_length: 2048
+  # Block requests with suspicious headers
+  block_suspicious_headers: true
+  # Suspicious headers
+  suspicious_headers:
+    - X-Forwarded-For
+    - X-Real-IP
+    - X-Originating-IP
+    - X-Remote-IP
+    - X-Remote-Addr
+    - X-Client-IP
+    - X-Host
+    - X-Forwarded-Server
+    - X-HTTP-Host-Override
+    - Forwarded
+  # Enable IP geolocation blocking
+  geo_blocking:
+    enabled: false
+    # Block specific countries
+    blocked_countries: []
+    # Allow specific countries only
+    allowed_countries: []
+
+# Monitoring and alerting
+monitoring:
+  # Enable health checks
+  health_checks: true
+  # Health check interval (seconds)
+  health_check_interval: 30
+  # Metrics collection
+  metrics:
+    enabled: true
+    # Metrics endpoint
+    endpoint: /metrics
+    # Metrics format (prometheus, json)
+    format: prometheus
+  # Alerting
+  alerting:
+    enabled: false
+    # Alert thresholds
+    thresholds:
+      # High request rate (requests per second)
+      high_request_rate: 100
+      # High error rate (percentage)
+      high_error_rate: 10
+      # High blacklist rate (percentage)
+      high_blacklist_rate: 50
+
+# Integration settings
+integration:
+  # Integrate with existing logging pipeline
+  logging_pipeline: true
+  # Send alerts to monitoring system
+  alerting: true
+  # Integration with Cowrie logs
+  cowrie_integration: true
+  # Shared log format
+  shared_log_format: true
+  # Integration with HTTP honeypot
+  http_honeypot_integration: true

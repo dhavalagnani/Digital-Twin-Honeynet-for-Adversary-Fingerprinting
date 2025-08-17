@@ -13,4 +13,21 @@ pyyaml==6.0.1
 schedule==1.2.0
 pydantic==2.5.0
 httpx==0.25.2
-python-dotenv==1.0.0 
+python-dotenv==1.0.0
+flask==2.3.3
+werkzeug==2.3.7
+paramiko==3.3.1
+ipaddress==1.0.23
+rdpy==0.1.0
+impacket==0.11.0
+# Additional dependencies for centralized configuration
+ipaddress==1.0.23
+hashlib
+threading
+socket
+json
+datetime
+pathlib
+typing
+dataclasses
+concurrent.futures 
