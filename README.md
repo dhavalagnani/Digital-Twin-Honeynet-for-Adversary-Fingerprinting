@@ -74,8 +74,8 @@ python3 logs/log_parser.py
 
 ## 📚 Documentation
 
-- **[Architecture Guide](docs/architecture.md)** - Detailed technical architecture
-- **[Setup Guide](docs/setup.md)** - Complete installation and configuration instructions
+- **[Architecture Guide](architecture.md)** - Detailed technical architecture
+- **[Setup Guide](setup.md)** - Complete installation and configuration instructions
 
 ## 🏗️ Repository Structure
 
@@ -108,9 +108,7 @@ digital-twin-honeynet/
 │   ├── fingerprint_test.py
 │   ├── simulate_attacker.py
 │   └── *.py
-├── docs/                     # Documentation
-│   ├── architecture.md
-│   └── setup.md
+
 ├── config.yaml              # Central configuration
 ├── install_native_services.sh     # Installation script
 ├── requirements.txt         # Python dependencies
@@ -218,7 +216,7 @@ python3 logs/log_parser.py --output attacks.json
 
 For issues and questions:
 
-1. Check the [Setup Guide](docs/setup.md) troubleshooting section
+1. Check the [Setup Guide](setup.md) troubleshooting section
 2. Review the logs: `/var/log/honeynet/`
 3. Check service status: `python3 controllers/honeynet_controller_native.py --action status`
 4. Open an issue on GitHub
