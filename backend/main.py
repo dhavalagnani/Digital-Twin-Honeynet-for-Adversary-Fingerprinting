@@ -22,6 +22,9 @@ from parser import LogParser
 from firewall import FirewallManager
 from config import BEHAVIOR_RULES, SYSTEM_CONFIG
 
+# Ensure logs directory exists before configuring logging
+Path("logs").mkdir(exist_ok=True)
+
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
@@ -46,10 +49,10 @@ log_parser = LogParser()
 firewall_manager = FirewallManager()
 
 # Setup templates
-templates = Jinja2Templates(directory="fastapi_backend/templates")
+templates = Jinja2Templates(directory="templates")
 
 # Mount static files
-app.mount("/static", StaticFiles(directory="fastapi_backend/static"), name="static")
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 # Global state for dashboard
 dashboard_stats = {
@@ -72,7 +75,7 @@ async def startup_event():
     
     # Create necessary directories
     Path("logs").mkdir(exist_ok=True)
-    Path("fastapi_backend/static").mkdir(exist_ok=True)
+    Path("static").mkdir(exist_ok=True)
     
     # Start log monitoring
     await log_monitor.start_monitoring()

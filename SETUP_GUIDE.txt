@@ -1,0 +1,229 @@
+================================================================================
+                    DIGITAL TWIN HONEYNET - SETUP GUIDE
+================================================================================
+
+This guide will help you set up and run the Digital Twin Honeynet project in a 
+virtual environment on Windows.
+
+================================================================================
+                            PREREQUISITES
+================================================================================
+
+1. Python 3.8+ installed on your system
+2. Git (optional, for cloning the repository)
+3. Administrator privileges (for some honeypot services)
+
+================================================================================
+                            STEP 1: PROJECT SETUP
+================================================================================
+
+1. Navigate to your project directory:
+   cd "D:\College Material\Sem 7\Khud ke Projects\Digital twin honeynet for adversarial fingerprinting"
+
+2. Create a virtual environment:
+   python -m venv honeynet_env
+
+3. Activate the virtual environment:
+   honeynet_env\Scripts\activate
+
+   Note: You should see (honeynet_env) at the beginning of your command prompt
+
+================================================================================
+                            STEP 2: INSTALL DEPENDENCIES
+================================================================================
+
+1. With the virtual environment activated, install the required packages:
+   pip install -r requirements.txt
+
+2. If you encounter any issues, try installing packages individually:
+   pip install fastapi==0.104.1
+   pip install uvicorn==0.24.0
+   pip install psutil==5.9.6
+   pip install pyyaml==6.0.1
+   pip install requests==2.31.0
+   pip install motor==3.3.2
+   pip install pymongo==4.6.0
+   pip install redis==5.0.1
+   pip install python-multipart==0.0.6
+   pip install jinja2==3.1.2
+   pip install aiofiles==23.2.1
+   pip install python-dotenv==1.0.0
+   pip install pydantic==2.5.0
+   pip install pydantic-settings==2.1.0
+   pip install python-jose[cryptography]==3.3.0
+   pip install passlib[bcrypt]==1.7.4
+
+================================================================================
+                            STEP 3: ENVIRONMENT CONFIGURATION
+================================================================================
+
+1. Copy the example environment file:
+   copy env.example .env
+
+2. Edit the .env file with your configuration:
+   - Set database connection strings if using MongoDB/Redis
+   - Configure honeypot ports and settings
+   - Set API keys if required
+
+================================================================================
+                            STEP 4: START THE BACKEND
+================================================================================
+
+1. Navigate to the backend directory:
+   cd backend
+
+2. Start the FastAPI backend server:
+   python main.py
+
+   OR using uvicorn directly:
+   uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+
+3. The backend will be available at:
+   - Dashboard: http://localhost:8000/
+   - API Documentation: http://localhost:8000/docs
+   - Health Check: http://localhost:8000/api/health
+
+================================================================================
+                            STEP 5: START HONEYPOT SERVICES
+================================================================================
+
+1. Open a new terminal window/tab
+2. Activate the virtual environment again:
+   honeynet_env\Scripts\activate
+
+3. Navigate to the project root:
+   cd "D:\College Material\Sem 7\Khud ke Projects\Digital twin honeynet for adversarial fingerprinting"
+
+4. Start all honeypot services:
+   python start_honeynet.py
+
+   This will start:
+   - HTTP Honeypot: http://localhost:8080
+   - HTTP Router: http://localhost:80
+   - SSH Honeypot: localhost:2222
+   - RDP Honeypot: localhost:3389
+   - SMB Honeypot: localhost:445
+
+================================================================================
+                            STEP 6: VERIFY INSTALLATION
+================================================================================
+
+1. Check if the backend is running:
+   curl http://localhost:8000/api/status
+   
+   Or visit: http://localhost:8000/api/status in your browser
+
+2. Check if honeypot services are running:
+   - HTTP: http://localhost:8080
+   - Dashboard: http://localhost:8000/
+
+3. Monitor logs:
+   - Backend logs: backend/logs/fastapi.log
+   - Honeypot logs: logs/honeynet.log
+
+================================================================================
+                            TROUBLESHOOTING
+================================================================================
+
+COMMON ISSUES:
+
+1. Port already in use:
+   - Change ports in config.yaml or .env file
+   - Kill processes using the ports: netstat -ano | findstr :8000
+
+2. Permission denied:
+   - Run as Administrator for honeypot services
+   - Check Windows Firewall settings
+
+3. Module not found:
+   - Ensure virtual environment is activated
+   - Reinstall dependencies: pip install -r requirements.txt
+
+4. nftables error (Windows):
+   - This is expected on Windows, firewall functionality may be limited
+   - The system will still work without nftables
+
+5. Directory not found:
+   - The setup script should create necessary directories
+   - Manually create: mkdir backend\logs, mkdir backend\static
+
+================================================================================
+                            USAGE
+================================================================================
+
+1. Access the dashboard:
+   http://localhost:8000/
+
+2. View API documentation:
+   http://localhost:8000/docs
+
+3. Monitor honeypot activity:
+   - Check the dashboard for real-time statistics
+   - View logs in the logs/ directory
+   - Use API endpoints for programmatic access
+
+4. Test the system:
+   - Run simulation scripts: python simulator/simulate_attacker1.py
+   - Check test results: python tests/fingerprint_test.py
+
+================================================================================
+                            STOPPING THE SYSTEM
+================================================================================
+
+1. Stop honeypot services:
+   - Press Ctrl+C in the honeypot terminal
+   - Or kill the processes manually
+
+2. Stop the backend:
+   - Press Ctrl+C in the backend terminal
+   - Or kill the uvicorn process
+
+3. Deactivate virtual environment:
+   deactivate
+
+================================================================================
+                            DEVELOPMENT
+================================================================================
+
+1. For development, use the --reload flag:
+   uvicorn main:app --reload
+
+2. Run tests:
+   pytest tests/
+
+3. Code formatting:
+   black backend/
+   flake8 backend/
+
+================================================================================
+                            SECURITY NOTES
+================================================================================
+
+⚠️  IMPORTANT SECURITY WARNINGS:
+
+1. This is a honeypot system designed to attract attackers
+2. Do not run on production systems without proper isolation
+3. Monitor all network activity carefully
+4. Use in a controlled environment only
+5. Keep the system updated and patched
+
+================================================================================
+                            SUPPORT
+================================================================================
+
+For issues and questions:
+1. Check the logs in the logs/ directory
+2. Review the README.md file
+3. Check the architecture.md for system design
+4. Run tests to verify functionality
+
+================================================================================
+                            VERSION INFO
+================================================================================
+
+Project: Digital Twin Honeynet for Adversarial Fingerprinting
+Version: 1.0.0
+Python: 3.8+
+Platform: Windows 10/11
+
+================================================================================
