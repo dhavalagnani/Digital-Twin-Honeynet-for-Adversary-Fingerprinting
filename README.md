@@ -12,7 +12,10 @@ This system implements a **Digital Twin** approach where all incoming traffic is
 - **Behavioral Analysis**: Rule-based classification of legitimate vs malicious traffic
 - **Smart Redirection**: Legitimate traffic redirected to production via HAProxy
 - **Automated Response**: Malicious IPs blocked via nftables/UFW
-- **Real-time Dashboard**: FastAPI-based monitoring interface
+- **Real-time Dashboard**: FastAPI-based monitoring interface with WebSocket support
+- **Comprehensive Logging**: Auditd, Cowrie, HAProxy, and nftables log collection
+- **Privilege Escalation Detection**: Advanced auditd rules for security monitoring
+- **Live Session Monitoring**: Real-time SSH session tracking and threat assessment
 - **Fingerprint Evasion**: Automatic testing and comparison of honeypot vs production fingerprints
 - **Centralized Configuration**: Single config.yaml for all services
 - **MongoDB Database**: Minimal schema for attack data storage
@@ -98,6 +101,11 @@ digital-twin-honeynet/
 │   ├── models.py
 │   ├── database.py
 │   └── templates/
+├── logging/                  # Comprehensive logging system
+│   ├── log_forwarder.py      # Real-time log collection and normalization
+│   ├── auditd_rules.conf     # Privilege escalation detection rules
+│   ├── setup_auditd.sh       # Auditd configuration script
+│   └── README.md            # Logging system documentation
 ├── logs/                     # Log monitoring scripts
 │   ├── cowrie_log_monitor.py
 │   └── log_parser.py

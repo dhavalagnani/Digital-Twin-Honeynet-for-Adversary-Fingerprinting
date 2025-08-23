@@ -17,6 +17,180 @@
     />
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- WebSocket for real-time updates -->
+    <script>
+      // WebSocket connection for real-time updates
+      let ws = null;
+      let reconnectAttempts = 0;
+      const maxReconnectAttempts = 5;
+
+      function connectWebSocket() {
+        try {
+          ws = new WebSocket("ws://" + window.location.host + "/ws");
+
+          ws.onopen = function () {
+            console.log("WebSocket connected");
+            reconnectAttempts = 0;
+            document.getElementById("ws-status").innerHTML =
+              '<span class="badge bg-success">Connected</span>';
+          };
+
+          ws.onmessage = function (event) {
+            const data = JSON.parse(event.data);
+            handleWebSocketMessage(data);
+          };
+
+          ws.onclose = function () {
+            console.log("WebSocket disconnected");
+            document.getElementById("ws-status").innerHTML =
+              '<span class="badge bg-danger">Disconnected</span>';
+
+            // Attempt to reconnect
+            if (reconnectAttempts < maxReconnectAttempts) {
+              reconnectAttempts++;
+              setTimeout(connectWebSocket, 2000);
+            }
+          };
+
+          ws.onerror = function (error) {
+            console.error("WebSocket error:", error);
+            document.getElementById("ws-status").innerHTML =
+              '<span class="badge bg-warning">Error</span>';
+          };
+        } catch (error) {
+          console.error("Failed to connect WebSocket:", error);
+        }
+      }
+
+      function handleWebSocketMessage(data) {
+        switch (data.type) {
+          case "log_update":
+            addLogEntry(data.log);
+            updateMetrics(data.stats);
+            break;
+          case "attack_alert":
+            showAttackAlert(data.alert);
+            break;
+          case "session_update":
+            updateActiveSessions(data.sessions);
+            break;
+          case "threat_update":
+            updateThreatLevel(data.threat_level);
+            break;
+        }
+      }
+
+      function addLogEntry(logEntry) {
+        const table = document.getElementById("events-table");
+        const tbody = table.querySelector("tbody");
+
+        const row = document.createElement("tr");
+        row.innerHTML = `
+                <td>${new Date(logEntry.timestamp).toLocaleTimeString()}</td>
+                <td><span class="badge bg-${getSourceBadgeColor(
+                  logEntry.source
+                )}">${logEntry.source}</span></td>
+                <td>${logEntry.actor.ip || "N/A"}</td>
+                <td>${logEntry.action}</td>
+                <td><span class="badge bg-${getResultBadgeColor(
+                  logEntry.result
+                )}">${logEntry.result}</span></td>
+                <td><span class="badge bg-${getThreatBadgeColor(
+                  logEntry.threat_score
+                )}">${logEntry.threat_score}</span></td>
+            `;
+
+        tbody.insertBefore(row, tbody.firstChild);
+
+        // Keep only last 50 entries
+        if (tbody.children.length > 50) {
+          tbody.removeChild(tbody.lastChild);
+        }
+      }
+
+      function showAttackAlert(alert) {
+        const container = document.getElementById("alerts-container");
+        const alertDiv = document.createElement("div");
+        alertDiv.className = "alert alert-danger alert-dismissible fade show";
+        alertDiv.innerHTML = `
+                <strong>🚨 Attack Detected!</strong> ${alert.description}
+                <br><small>Source: ${alert.source} | Threat Score: ${alert.threat_score}</small>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+
+        container.insertBefore(alertDiv, container.firstChild);
+
+        // Auto-remove after 10 seconds
+        setTimeout(() => {
+          if (alertDiv.parentNode) {
+            alertDiv.remove();
+          }
+        }, 10000);
+      }
+
+      function updateActiveSessions(sessions) {
+        const container = document.getElementById("active-sessions");
+        container.innerHTML = sessions
+          .map(
+            (session) => `
+                <div class="session-item d-flex justify-content-between align-items-center p-2 border-bottom">
+                    <div>
+                        <strong>${session.ip}</strong>
+                        <br><small>${session.username} | ${
+              session.duration
+            }</small>
+                    </div>
+                    <span class="badge bg-${
+                      session.status === "active" ? "success" : "warning"
+                    }">${session.status}</span>
+                </div>
+            `
+          )
+          .join("");
+      }
+
+      function updateThreatLevel(level) {
+        const threatElement = document.getElementById("threat-level");
+        const colors = {
+          low: "success",
+          medium: "warning",
+          high: "danger",
+        };
+        threatElement.className = `badge bg-${colors[level]}`;
+        threatElement.textContent = level.toUpperCase();
+      }
+
+      function getSourceBadgeColor(source) {
+        const colors = {
+          cowrie_ssh: "primary",
+          auditd: "info",
+          haproxy: "secondary",
+          nftables: "dark",
+        };
+        return colors[source] || "light";
+      }
+
+      function getResultBadgeColor(result) {
+        const colors = {
+          success: "success",
+          failed: "danger",
+          blocked: "warning",
+          allowed: "info",
+        };
+        return colors[result] || "light";
+      }
+
+      function getThreatBadgeColor(score) {
+        if (score >= 70) return "danger";
+        if (score >= 40) return "warning";
+        return "success";
+      }
+
+      // Connect WebSocket on page load
+      document.addEventListener("DOMContentLoaded", function () {
+        connectWebSocket();
+      });
+    </script>
 
     <style>
       .status-card {
@@ -85,9 +259,18 @@
           <i class="fas fa-shield-alt"></i> Digital Twin Honeynet
         </a>
         <div class="navbar-nav ms-auto">
-          <span class="navbar-text">
+          <span class="navbar-text me-3">
             <i class="fas fa-clock"></i>
             <span id="current-time">{{ stats.timestamp }}</span>
+          </span>
+          <span class="navbar-text me-3">
+            <i class="fas fa-wifi"></i>
+            <span id="ws-status">Connecting...</span>
+          </span>
+          <span class="navbar-text">
+            <i class="fas fa-shield-alt"></i>
+            Threat Level:
+            <span id="threat-level" class="badge bg-success">LOW</span>
           </span>
         </div>
       </div>
@@ -194,6 +377,15 @@
         </div>
       </div>
 
+      <!-- Real-time Alerts -->
+      <div class="row mb-4">
+        <div class="col-12">
+          <div id="alerts-container">
+            <!-- Dynamic alerts will be inserted here -->
+          </div>
+        </div>
+      </div>
+
       <!-- Main Content Row -->
       <div class="row">
         <!-- Left Column -->
@@ -268,6 +460,19 @@
 
         <!-- Right Column -->
         <div class="col-md-4">
+          <!-- Active SSH Sessions -->
+          <div class="card mb-4">
+            <div class="card-header">
+              <h5><i class="fas fa-terminal"></i> Active SSH Sessions</h5>
+            </div>
+            <div class="card-body">
+              <div id="active-sessions">
+                <!-- Dynamic sessions will be inserted here -->
+                <div class="text-muted text-center">No active sessions</div>
+              </div>
+            </div>
+          </div>
+
           <!-- System Health -->
           <div class="card mb-4">
             <div class="card-header">

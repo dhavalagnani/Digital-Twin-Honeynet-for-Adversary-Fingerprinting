@@ -72,3 +72,111 @@
 2025-08-23 19:27:14,890 - firewall - ERROR - nftables not available
 2025-08-23 19:27:14,891 - main - INFO - System initialized successfully
 2025-08-23 19:27:48,008 - main - INFO - GET /health - 404 - 0.001s
+2025-08-23 23:58:40,254 - main - INFO - Shutting down Digital Twin Honeynet
+2025-08-23 23:58:40,285 - log_monitor - INFO - Log monitoring stopped
+2025-08-23 23:58:44,352 - parser - INFO - Log parser initialized
+2025-08-23 23:58:44,445 - firewall - INFO - Firewall manager initialized
+2025-08-23 23:58:44,449 - log_monitor - INFO - Log monitor initialized
+2025-08-23 23:58:44,452 - parser - INFO - Log parser initialized
+2025-08-23 23:58:44,453 - firewall - INFO - Firewall manager initialized
+2025-08-23 23:58:44,643 - parser - INFO - Log parser initialized
+2025-08-23 23:58:44,747 - firewall - INFO - Firewall manager initialized
+2025-08-23 23:58:44,900 - log_monitor - INFO - Log monitor initialized
+2025-08-23 23:58:45,133 - parser - INFO - Log parser initialized
+2025-08-23 23:58:45,265 - firewall - INFO - Firewall manager initialized
+2025-08-23 23:58:45,432 - main - INFO - Starting Digital Twin Honeynet FastAPI Backend
+2025-08-23 23:58:45,453 - log_monitor - INFO - Started monitoring log directory: honeypot\logs
+2025-08-23 23:58:45,456 - log_monitor - INFO - Processed existing log files
+2025-08-23 23:58:45,461 - firewall - ERROR - nftables not found or not working
+2025-08-23 23:58:45,463 - firewall - ERROR - nftables not available
+2025-08-23 23:58:45,465 - main - INFO - System initialized successfully
+2025-08-23 23:58:49,363 - main - INFO - Shutting down Digital Twin Honeynet
+2025-08-23 23:58:49,366 - log_monitor - INFO - Log monitoring stopped
+2025-08-23 23:58:50,895 - parser - INFO - Log parser initialized
+2025-08-23 23:58:50,897 - firewall - INFO - Firewall manager initialized
+2025-08-23 23:58:50,898 - log_monitor - INFO - Log monitor initialized
+2025-08-23 23:58:50,900 - parser - INFO - Log parser initialized
+2025-08-23 23:58:50,903 - firewall - INFO - Firewall manager initialized
+2025-08-23 23:58:51,044 - parser - INFO - Log parser initialized
+2025-08-23 23:58:51,047 - firewall - INFO - Firewall manager initialized
+2025-08-23 23:58:51,048 - log_monitor - INFO - Log monitor initialized
+2025-08-23 23:58:51,051 - parser - INFO - Log parser initialized
+2025-08-23 23:58:51,053 - firewall - INFO - Firewall manager initialized
+2025-08-23 23:58:51,061 - main - INFO - Starting Digital Twin Honeynet FastAPI Backend
+2025-08-23 23:58:51,067 - log_monitor - INFO - Started monitoring log directory: honeypot\logs
+2025-08-23 23:58:51,069 - log_monitor - INFO - Processed existing log files
+2025-08-23 23:58:51,074 - firewall - ERROR - nftables not found or not working
+2025-08-23 23:58:51,075 - firewall - ERROR - nftables not available
+2025-08-23 23:58:51,077 - main - INFO - System initialized successfully
+2025-08-23 23:59:01,529 - main - INFO - Shutting down Digital Twin Honeynet
+2025-08-23 23:59:01,707 - log_monitor - INFO - Log monitoring stopped
+2025-08-23 23:59:05,479 - parser - INFO - Log parser initialized
+2025-08-23 23:59:05,480 - firewall - INFO - Firewall manager initialized
+2025-08-23 23:59:05,482 - log_monitor - INFO - Log monitor initialized
+2025-08-23 23:59:05,484 - parser - INFO - Log parser initialized
+2025-08-23 23:59:05,486 - firewall - INFO - Firewall manager initialized
+2025-08-23 23:59:05,691 - parser - INFO - Log parser initialized
+2025-08-23 23:59:05,694 - firewall - INFO - Firewall manager initialized
+2025-08-23 23:59:05,695 - log_monitor - INFO - Log monitor initialized
+2025-08-23 23:59:05,697 - parser - INFO - Log parser initialized
+2025-08-23 23:59:05,700 - firewall - INFO - Firewall manager initialized
+2025-08-23 23:59:05,708 - main - INFO - Starting Digital Twin Honeynet FastAPI Backend
+2025-08-23 23:59:05,714 - log_monitor - INFO - Started monitoring log directory: honeypot\logs
+2025-08-23 23:59:05,717 - log_monitor - INFO - Processed existing log files
+2025-08-23 23:59:05,722 - firewall - ERROR - nftables not found or not working
+2025-08-23 23:59:05,723 - firewall - ERROR - nftables not available
+2025-08-23 23:59:05,727 - main - INFO - System initialized successfully
+2025-08-23 23:59:19,574 - main - INFO - Shutting down Digital Twin Honeynet
+2025-08-23 23:59:19,591 - log_monitor - INFO - Log monitoring stopped
+2025-08-23 23:59:24,900 - parser - INFO - Log parser initialized
+2025-08-23 23:59:24,905 - firewall - INFO - Firewall manager initialized
+2025-08-23 23:59:24,909 - log_monitor - INFO - Log monitor initialized
+2025-08-23 23:59:24,910 - parser - INFO - Log parser initialized
+2025-08-23 23:59:24,913 - firewall - INFO - Firewall manager initialized
+2025-08-23 23:59:25,053 - parser - INFO - Log parser initialized
+2025-08-23 23:59:25,055 - firewall - INFO - Firewall manager initialized
+2025-08-23 23:59:25,056 - log_monitor - INFO - Log monitor initialized
+2025-08-23 23:59:25,058 - parser - INFO - Log parser initialized
+2025-08-23 23:59:25,061 - firewall - INFO - Firewall manager initialized
+2025-08-23 23:59:25,068 - main - INFO - Starting Digital Twin Honeynet FastAPI Backend
+2025-08-23 23:59:25,075 - log_monitor - INFO - Started monitoring log directory: honeypot\logs
+2025-08-23 23:59:25,077 - log_monitor - INFO - Processed existing log files
+2025-08-23 23:59:25,082 - firewall - ERROR - nftables not found or not working
+2025-08-23 23:59:25,083 - firewall - ERROR - nftables not available
+2025-08-23 23:59:25,085 - main - INFO - System initialized successfully
+2025-08-24 00:01:13,315 - main - INFO - Shutting down Digital Twin Honeynet
+2025-08-24 00:01:13,317 - log_monitor - INFO - Log monitoring stopped
+2025-08-24 00:01:14,986 - parser - INFO - Log parser initialized
+2025-08-24 00:01:14,989 - firewall - INFO - Firewall manager initialized
+2025-08-24 00:01:14,990 - log_monitor - INFO - Log monitor initialized
+2025-08-24 00:01:14,990 - parser - INFO - Log parser initialized
+2025-08-24 00:01:14,992 - firewall - INFO - Firewall manager initialized
+2025-08-24 00:01:15,196 - parser - INFO - Log parser initialized
+2025-08-24 00:01:15,198 - firewall - INFO - Firewall manager initialized
+2025-08-24 00:01:15,199 - log_monitor - INFO - Log monitor initialized
+2025-08-24 00:01:15,199 - parser - INFO - Log parser initialized
+2025-08-24 00:01:15,201 - firewall - INFO - Firewall manager initialized
+2025-08-24 00:01:15,208 - main - INFO - Starting Digital Twin Honeynet FastAPI Backend
+2025-08-24 00:01:15,216 - log_monitor - INFO - Started monitoring log directory: honeypot\logs
+2025-08-24 00:01:15,219 - log_monitor - INFO - Processed existing log files
+2025-08-24 00:01:15,225 - firewall - ERROR - nftables not found or not working
+2025-08-24 00:01:15,225 - firewall - ERROR - nftables not available
+2025-08-24 00:01:15,225 - main - INFO - System initialized successfully
+2025-08-24 00:01:21,748 - main - INFO - Shutting down Digital Twin Honeynet
+2025-08-24 00:01:21,751 - log_monitor - INFO - Log monitoring stopped
+2025-08-24 00:01:23,337 - parser - INFO - Log parser initialized
+2025-08-24 00:01:23,338 - firewall - INFO - Firewall manager initialized
+2025-08-24 00:01:23,339 - log_monitor - INFO - Log monitor initialized
+2025-08-24 00:01:23,339 - parser - INFO - Log parser initialized
+2025-08-24 00:01:23,340 - firewall - INFO - Firewall manager initialized
+2025-08-24 00:01:23,514 - parser - INFO - Log parser initialized
+2025-08-24 00:01:23,518 - firewall - INFO - Firewall manager initialized
+2025-08-24 00:01:23,518 - log_monitor - INFO - Log monitor initialized
+2025-08-24 00:01:23,519 - parser - INFO - Log parser initialized
+2025-08-24 00:01:23,522 - firewall - INFO - Firewall manager initialized
+2025-08-24 00:01:23,532 - main - INFO - Starting Digital Twin Honeynet FastAPI Backend
+2025-08-24 00:01:23,534 - log_monitor - INFO - Started monitoring log directory: honeypot\logs
+2025-08-24 00:01:23,535 - log_monitor - INFO - Processed existing log files
+2025-08-24 00:01:23,544 - firewall - ERROR - nftables not found or not working
+2025-08-24 00:01:23,546 - firewall - ERROR - nftables not available
+2025-08-24 00:01:23,547 - main - INFO - System initialized successfully

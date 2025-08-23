@@ -11,11 +11,13 @@ from typing import List, Dict, Any
 from pathlib import Path
 import json
 
-from fastapi import FastAPI, Request, HTTPException, BackgroundTasks
+from fastapi import FastAPI, Request, HTTPException, BackgroundTasks, WebSocket, WebSocketDisconnect
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 import uvicorn
+import asyncio
+import json
 
 from log_monitor import LogMonitor
 from parser import LogParser
@@ -67,6 +69,15 @@ dashboard_stats = {
 # Store recent events for dashboard
 recent_events = []
 max_events = 100
+
+# WebSocket connections
+websocket_connections = []
+
+# Active SSH sessions
+active_sessions = {}
+
+# Threat level tracking
+current_threat_level = 'low'
 
 @app.on_event("startup")
 async def startup_event():
@@ -217,6 +228,129 @@ async def unblock_ip(request: Request):
     except Exception as e:
         logger.error(f"Error unblocking IP: {e}")
         raise HTTPException(status_code=500, detail="Unblock error")
+
+@app.post("/api/logs")
+async def receive_log(request: Request):
+    """Receive normalized logs from log forwarder"""
+    try:
+        log_entry = await request.json()
+        
+        # Add to recent events
+        recent_events.append(log_entry)
+        
+        # Keep only recent events
+        if len(recent_events) > max_events:
+            recent_events.pop(0)
+        
+        # Update threat level
+        update_threat_level()
+        
+        # Broadcast to WebSocket clients
+        await broadcast_to_websockets({
+            'type': 'log_update',
+            'log': log_entry,
+            'stats': await get_system_stats()
+        })
+        
+        # Check for high threat events and send alerts
+        if log_entry.get('threat_score', 0) > 70:
+            await broadcast_to_websockets({
+                'type': 'attack_alert',
+                'alert': {
+                    'description': f"High threat activity detected: {log_entry.get('action')}",
+                    'source': log_entry.get('source'),
+                    'threat_score': log_entry.get('threat_score'),
+                    'timestamp': log_entry.get('timestamp')
+                }
+            })
+        
+        # Update active sessions if it's an SSH event
+        if log_entry.get('source') == 'cowrie_ssh':
+            await update_ssh_sessions(log_entry)
+        
+        return {"success": True, "message": "Log received"}
+        
+    except Exception as e:
+        logger.error(f"Error receiving log: {e}")
+        raise HTTPException(status_code=500, detail="Log processing error")
+
+async def update_ssh_sessions(log_entry: dict):
+    """Update active SSH sessions"""
+    global active_sessions
+    
+    event_type = log_entry.get('event_type', '')
+    session_id = log_entry.get('actor', {}).get('session', '')
+    ip_address = log_entry.get('actor', {}).get('ip', '')
+    username = log_entry.get('actor', {}).get('username', '')
+    
+    if event_type == 'cowrie.session.connect':
+        active_sessions[session_id] = {
+            'ip': ip_address,
+            'username': username,
+            'start_time': log_entry.get('timestamp'),
+            'status': 'active'
+        }
+    elif event_type == 'cowrie.session.closed':
+        if session_id in active_sessions:
+            del active_sessions[session_id]
+    
+    # Broadcast session update
+    await broadcast_to_websockets({
+        'type': 'session_update',
+        'sessions': list(active_sessions.values())
+    })
+    
+    # Broadcast threat level update
+    await broadcast_to_websockets({
+        'type': 'threat_update',
+        'threat_level': current_threat_level
+    })
+
+@app.websocket("/ws")
+async def websocket_endpoint(websocket: WebSocket):
+    """WebSocket endpoint for real-time updates"""
+    await websocket.accept()
+    websocket_connections.append(websocket)
+    
+    try:
+        while True:
+            # Keep connection alive
+            await websocket.receive_text()
+    except WebSocketDisconnect:
+        websocket_connections.remove(websocket)
+
+async def broadcast_to_websockets(message: dict):
+    """Broadcast message to all connected WebSocket clients"""
+    if not websocket_connections:
+        return
+        
+    message_json = json.dumps(message)
+    disconnected = []
+    
+    for websocket in websocket_connections:
+        try:
+            await websocket.send_text(message_json)
+        except:
+            disconnected.append(websocket)
+    
+    # Remove disconnected clients
+    for websocket in disconnected:
+        websocket_connections.remove(websocket)
+
+def update_threat_level():
+    """Update global threat level based on recent events"""
+    global current_threat_level
+    
+    # Calculate threat level based on recent events
+    high_threat_events = sum(1 for event in recent_events[-20:] 
+                           if event.get('threat_score', 0) > 70)
+    
+    if high_threat_events >= 3:
+        current_threat_level = 'high'
+    elif high_threat_events >= 1:
+        current_threat_level = 'medium'
+    else:
+        current_threat_level = 'low'
 
 @app.get("/api/health")
 async def health_check():

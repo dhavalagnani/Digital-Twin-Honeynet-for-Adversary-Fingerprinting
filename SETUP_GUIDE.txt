@@ -35,7 +35,11 @@ virtual environment on Windows.
 1. With the virtual environment activated, install the required packages:
    pip install -r requirements.txt
 
-2. If you encounter any issues, try installing packages individually:
+2. Install additional logging dependencies:
+   pip install watchdog==3.0.0
+   pip install websockets==12.0
+
+3. If you encounter any issues, try installing packages individually:
    pip install fastapi==0.104.1
    pip install uvicorn==0.24.0
    pip install psutil==5.9.6
@@ -52,6 +56,8 @@ virtual environment on Windows.
    pip install pydantic-settings==2.1.0
    pip install python-jose[cryptography]==3.3.0
    pip install passlib[bcrypt]==1.7.4
+   pip install watchdog==3.0.0
+   pip install websockets==12.0
 
 ================================================================================
                             STEP 3: ENVIRONMENT CONFIGURATION
@@ -66,7 +72,23 @@ virtual environment on Windows.
    - Set API keys if required
 
 ================================================================================
-                            STEP 4: START THE BACKEND
+                            STEP 4: SETUP AUDITD (OPTIONAL)
+================================================================================
+
+Note: This step is optional but recommended for comprehensive privilege escalation logging.
+
+1. If you're on Linux, you can set up auditd for enhanced security monitoring:
+   sudo chmod +x logging/setup_auditd.sh
+   sudo ./logging/setup_auditd.sh
+
+2. This will install and configure auditd with comprehensive rules for:
+   - Privilege escalation detection
+   - File access monitoring
+   - User management tracking
+   - System configuration changes
+
+================================================================================
+                            STEP 5: START THE BACKEND
 ================================================================================
 
 1. Navigate to the backend directory:
@@ -82,12 +104,36 @@ virtual environment on Windows.
    - Dashboard: http://localhost:8000/
    - API Documentation: http://localhost:8000/docs
    - Health Check: http://localhost:8000/api/health
+   - WebSocket: ws://localhost:8000/ws (for real-time updates)
 
 ================================================================================
-                            STEP 5: START HONEYPOT SERVICES
+                            STEP 6: START LOG FORWARDER
 ================================================================================
 
 1. Open a new terminal window/tab
+2. Activate the virtual environment again:
+   honeynet_env\Scripts\activate
+
+3. Navigate to the project root:
+   cd "D:\College Material\Sem 7\Khud ke Projects\Digital twin honeynet for adversarial fingerprinting"
+
+4. Start the log forwarder for comprehensive logging:
+   python logging/log_forwarder.py
+
+   This will start real-time log collection from:
+   - Cowrie SSH honeypot logs
+   - Auditd system logs (if configured)
+   - HAProxy access logs
+   - nftables firewall logs
+
+5. For debug mode, use:
+   python logging/log_forwarder.py --debug
+
+================================================================================
+                            STEP 7: START HONEYPOT SERVICES
+================================================================================
+
+1. Open another new terminal window/tab
 2. Activate the virtual environment again:
    honeynet_env\Scripts\activate
 
@@ -105,7 +151,7 @@ virtual environment on Windows.
    - SMB Honeypot: localhost:445
 
 ================================================================================
-                            STEP 6: VERIFY INSTALLATION
+                            STEP 8: VERIFY INSTALLATION
 ================================================================================
 
 1. Check if the backend is running:
@@ -117,9 +163,20 @@ virtual environment on Windows.
    - HTTP: http://localhost:8080
    - Dashboard: http://localhost:8000/
 
-3. Monitor logs:
+3. Check if log forwarder is running:
+   - Look for "Log forwarder started successfully" message
+   - Check for WebSocket connection in dashboard
+
+4. Monitor logs:
    - Backend logs: backend/logs/fastapi.log
    - Honeypot logs: logs/honeynet.log
+   - Auditd logs: /var/log/audit/audit.log (Linux only)
+   - Log forwarder: Check terminal output
+
+5. Verify real-time features:
+   - WebSocket status should show "Connected" in dashboard
+   - Threat level indicator should be visible
+   - Real-time alerts container should be present
 
 ================================================================================
                             TROUBLESHOOTING
@@ -147,11 +204,26 @@ COMMON ISSUES:
    - The setup script should create necessary directories
    - Manually create: mkdir backend\logs, mkdir backend\static
 
+6. Log forwarder not connecting:
+   - Check if backend is running: curl http://localhost:8000/api/health
+   - Verify log file permissions (Linux): ls -la /var/log/audit/audit.log
+   - Check log forwarder output for error messages
+
+7. WebSocket not working:
+   - Check browser console for WebSocket errors
+   - Verify WebSocket endpoint: curl -i -N -H "Connection: Upgrade" -H "Upgrade: websocket" http://localhost:8000/ws
+   - Ensure no firewall is blocking WebSocket connections
+
+8. Auditd not logging (Linux):
+   - Check auditd status: sudo systemctl status auditd
+   - Reload audit rules: sudo auditctl -R /etc/audit/rules.d/honeynet.rules
+   - Verify auditd is running: sudo auditctl -l
+
 ================================================================================
                             USAGE
 ================================================================================
 
-1. Access the dashboard:
+1. Access the enhanced dashboard:
    http://localhost:8000/
 
 2. View API documentation:
@@ -159,12 +231,23 @@ COMMON ISSUES:
 
 3. Monitor honeypot activity:
    - Check the dashboard for real-time statistics
+   - View live SSH sessions in the right sidebar
+   - Monitor real-time attack alerts at the top
+   - Check threat level indicator in navigation
    - View logs in the logs/ directory
    - Use API endpoints for programmatic access
 
-4. Test the system:
+4. Real-time Features:
+   - WebSocket connection for instant updates
+   - Live SSH session monitoring
+   - Real-time attack notifications
+   - Dynamic threat level assessment
+   - Interactive traffic flow visualization
+
+5. Test the system:
    - Run simulation scripts: python simulator/simulate_attacker1.py
    - Check test results: python tests/fingerprint_test.py
+   - Monitor real-time logs: tail -f logs/honeynet.log
 
 ================================================================================
                             STOPPING THE SYSTEM

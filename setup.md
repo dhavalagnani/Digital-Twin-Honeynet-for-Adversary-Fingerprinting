@@ -67,7 +67,27 @@ The installation script will:
 - Configure network interfaces
 - Install Python dependencies
 
-### Step 4: Verify Installation
+### Step 4: Setup Comprehensive Logging System
+
+```bash
+# Install additional Python dependencies for logging
+pip3 install watchdog==3.0.0 websockets==12.0
+
+# Setup auditd for privilege escalation detection
+sudo chmod +x logging/setup_auditd.sh
+sudo ./logging/setup_auditd.sh
+```
+
+The auditd setup will:
+
+- Install and configure auditd service
+- Load comprehensive security monitoring rules
+- Set up log rotation for audit logs
+- Configure privilege escalation detection
+- Enable file access monitoring
+- Set up user management tracking
+
+### Step 5: Verify Installation
 
 ```bash
 # Check service status
@@ -78,6 +98,13 @@ sudo systemctl status mongodb
 sudo systemctl status redis-server
 sudo systemctl status haproxy
 sudo systemctl status nginx
+
+# Verify auditd installation
+sudo systemctl status auditd
+sudo auditctl -l
+
+# Check log forwarder dependencies
+python3 -c "import watchdog, websockets; print('Logging dependencies installed successfully')"
 ```
 
 ## Configuration
@@ -207,7 +234,62 @@ sudo ln -s /etc/nginx/sites-available/production /etc/nginx/sites-enabled/
 sudo nginx -t
 ```
 
-### Step 5: Honeypot Configuration
+### Step 5: Enhanced System Startup
+
+**Start Core Services**:
+
+```bash
+# Start all honeynet services
+python3 controllers/honeynet_controller_native.py --action start
+
+# Or start services individually
+sudo systemctl start mongodb
+sudo systemctl start redis-server
+sudo systemctl start haproxy
+sudo systemctl start nginx
+```
+
+**Start Enhanced Backend**:
+
+```bash
+# Navigate to backend directory
+cd backend
+
+# Start FastAPI backend with WebSocket support
+python3 main.py
+
+# Or using uvicorn directly
+uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+```
+
+**Start Log Forwarder**:
+
+```bash
+# In a new terminal, start the log forwarder
+python3 logging/log_forwarder.py
+
+# For debug mode
+python3 logging/log_forwarder.py --debug
+
+# Check log forwarder status
+ps aux | grep log_forwarder
+```
+
+**Verify Real-time Features**:
+
+```bash
+# Check WebSocket endpoint
+curl -i -N -H "Connection: Upgrade" -H "Upgrade: websocket" http://localhost:8000/ws
+
+# Check log forwarder API
+curl http://localhost:8000/api/health
+
+# Monitor real-time logs
+tail -f /var/log/audit/audit.log
+tail -f logs/honeynet.log
+```
+
+### Step 6: Honeypot Configuration
 
 **SSH Honeypot (Cowrie)**:
 
@@ -397,18 +479,41 @@ journalctl -u rdp-honeypot -f
 journalctl -u smb-honeypot -f
 ```
 
-### Step 2: Access Dashboard
+### Step 2: Access Enhanced Dashboard
 
 ```bash
 # Open web browser and navigate to:
 http://localhost:8000
+
+# Enhanced features available:
+# - Real-time WebSocket updates
+# - Live SSH session monitoring
+# - Dynamic threat level indicators
+# - Real-time attack alerts
+# - Interactive traffic flow visualization
 
 # Default credentials (if configured):
 # Username: admin
 # Password: honeynet_password
 ```
 
-### Step 3: Check Database
+### Step 3: Monitor Real-time Logs
+
+```bash
+# Monitor comprehensive logging system
+tail -f /var/log/audit/audit.log          # Auditd logs (privilege escalation)
+tail -f /var/log/honeynet/cowrie.json     # Cowrie SSH logs
+tail -f /var/log/haproxy.log              # HAProxy access logs
+tail -f /var/log/nftables.log             # Firewall logs
+
+# Check log forwarder status
+ps aux | grep log_forwarder
+
+# Verify WebSocket connection
+curl -i -N -H "Connection: Upgrade" -H "Upgrade: websocket" http://localhost:8000/ws
+```
+
+### Step 4: Check Database
 
 ```bash
 # Access MongoDB
@@ -419,6 +524,9 @@ db.attacks.find().pretty()
 
 # View recent attacks
 db.attacks.find({timestamp: {$gte: new Date(Date.now() - 24*60*60*1000)}}).pretty()
+
+# View normalized logs (if using log forwarder)
+db.normalized_logs.find().sort({timestamp: -1}).limit(10).pretty()
 ```
 
 ## Troubleshooting
@@ -464,6 +572,115 @@ sudo systemctl status mongodb
 
 # Test connection
 sudo -u mongodb mongosh -c "db.runCommand('ping')"
+```
+
+**5. Log Forwarder Issues**:
+
+```bash
+# Check log forwarder status
+ps aux | grep log_forwarder
+
+# Check log file permissions
+ls -la /var/log/audit/audit.log
+ls -la /var/log/honeynet/cowrie.json
+
+# Restart log forwarder
+pkill -f log_forwarder
+python3 logging/log_forwarder.py --debug
+```
+
+**6. WebSocket Connection Issues**:
+
+```bash
+# Check WebSocket endpoint
+curl -i -N -H "Connection: Upgrade" -H "Upgrade: websocket" http://localhost:8000/ws
+
+# Check browser console for errors
+# Verify no firewall blocking WebSocket connections
+
+# Test WebSocket manually
+python3 -c "
+import websockets
+import asyncio
+async def test():
+    try:
+        async with websockets.connect('ws://localhost:8000/ws') as ws:
+            print('WebSocket connection successful')
+    except Exception as e:
+        print(f'WebSocket error: {e}')
+asyncio.run(test())
+"
+```
+
+**7. Auditd Issues**:
+
+```bash
+# Check auditd status
+sudo systemctl status auditd
+
+# Reload audit rules
+sudo auditctl -R /etc/audit/rules.d/honeynet.rules
+
+# Verify audit rules are loaded
+sudo auditctl -l
+
+# Check audit log
+sudo tail -f /var/log/audit/audit.log
+```
+
+## Enhanced Features
+
+### Real-time Monitoring
+
+The enhanced system provides comprehensive real-time monitoring capabilities:
+
+**1. WebSocket Real-time Updates**:
+
+- Instant event notifications
+- Live SSH session tracking
+- Dynamic threat level assessment
+- Real-time attack alerts
+
+**2. Comprehensive Logging**:
+
+- Multi-source log collection (Cowrie, auditd, HAProxy, nftables)
+- JSON normalization for unified processing
+- Real-time log forwarding
+- Threat scoring and pattern detection
+
+**3. Privilege Escalation Detection**:
+
+- Auditd rules for sudo/su monitoring
+- File access pattern tracking
+- User management monitoring
+- System configuration change detection
+
+**4. Interactive Dashboard**:
+
+- Real-time metrics and statistics
+- Live session monitoring
+- Interactive traffic flow visualization
+- Dynamic threat level indicators
+
+### Log Schema
+
+All logs are normalized into a unified JSON schema:
+
+```json
+{
+  "timestamp": "2024-01-15T10:30:45.123Z",
+  "source": "cowrie_ssh|auditd|haproxy|nftables",
+  "actor": {
+    "ip": "192.168.1.100",
+    "username": "attacker",
+    "session": "session_id"
+  },
+  "action": "ssh_login|command_execution|privilege_escalation",
+  "result": "success|failed|blocked|allowed",
+  "threat_score": 75,
+  "raw_data": {...},
+  "normalized": true
+}
 ```
 
 ### Performance Tuning
