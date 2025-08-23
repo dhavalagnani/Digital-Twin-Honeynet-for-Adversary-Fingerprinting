@@ -50,3 +50,25 @@
 2025-08-23 16:32:09,128 - main - INFO - GET /api/status - 200 - 0.001s
 2025-08-23 16:32:14,249 - main - INFO - Shutting down Digital Twin Honeynet
 2025-08-23 16:32:14,250 - log_monitor - INFO - Log monitoring stopped
+2025-08-23 19:27:13,912 - parser - INFO - Log parser initialized
+2025-08-23 19:27:13,913 - firewall - INFO - Firewall manager initialized
+2025-08-23 19:27:13,913 - log_monitor - INFO - Log monitor initialized
+2025-08-23 19:27:13,914 - parser - INFO - Log parser initialized
+2025-08-23 19:27:13,914 - firewall - INFO - Firewall manager initialized
+2025-08-23 19:27:14,700 - parser - INFO - Log parser initialized
+2025-08-23 19:27:14,701 - firewall - INFO - Firewall manager initialized
+2025-08-23 19:27:14,701 - log_monitor - INFO - Log monitor initialized
+2025-08-23 19:27:14,702 - parser - INFO - Log parser initialized
+2025-08-23 19:27:14,702 - firewall - INFO - Firewall manager initialized
+2025-08-23 19:27:14,871 - parser - INFO - Log parser initialized
+2025-08-23 19:27:14,873 - firewall - INFO - Firewall manager initialized
+2025-08-23 19:27:14,873 - log_monitor - INFO - Log monitor initialized
+2025-08-23 19:27:14,874 - parser - INFO - Log parser initialized
+2025-08-23 19:27:14,875 - firewall - INFO - Firewall manager initialized
+2025-08-23 19:27:14,879 - main - INFO - Starting Digital Twin Honeynet FastAPI Backend
+2025-08-23 19:27:14,884 - log_monitor - INFO - Started monitoring log directory: honeypot\logs
+2025-08-23 19:27:14,886 - log_monitor - INFO - Processed existing log files
+2025-08-23 19:27:14,890 - firewall - ERROR - nftables not found or not working
+2025-08-23 19:27:14,890 - firewall - ERROR - nftables not available
+2025-08-23 19:27:14,891 - main - INFO - System initialized successfully
+2025-08-23 19:27:48,008 - main - INFO - GET /health - 404 - 0.001s
