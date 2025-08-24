@@ -68,6 +68,10 @@
             addLogEntry(data.log);
             updateMetrics(data.stats);
             break;
+          case "cowrie_log_update":
+            addCowrieLogEntry(data.log);
+            updateMetrics(data.stats);
+            break;
           case "attack_alert":
             showAttackAlert(data.alert);
             break;
@@ -105,6 +109,61 @@
         // Keep only last 50 entries
         if (tbody.children.length > 50) {
           tbody.removeChild(tbody.lastChild);
+        }
+      }
+
+      function addCowrieLogEntry(logEntry) {
+        const table = document.getElementById("events-table");
+        const tbody = table.querySelector("tbody");
+
+        // Create row with Cowrie-specific styling
+        const row = document.createElement("tr");
+        row.className = "cowrie-log-entry";
+        row.innerHTML = `
+                <td>${new Date(logEntry.timestamp).toLocaleTimeString()}</td>
+                <td><span class="badge bg-info">🐝 Cowrie SSH</span></td>
+                <td>${logEntry.actor.ip || "N/A"}</td>
+                <td>${logEntry.action}</td>
+                <td><span class="badge bg-${getResultBadgeColor(
+                  logEntry.result
+                )}">${logEntry.result}</span></td>
+                <td><span class="badge bg-${getThreatBadgeColor(
+                  logEntry.threat_score
+                )}">${logEntry.threat_score}</span></td>
+            `;
+
+        // Add highlight effect for new entries
+        row.style.backgroundColor = "#f8f9fa";
+        setTimeout(() => {
+          row.style.backgroundColor = "";
+        }, 2000);
+
+        tbody.insertBefore(row, tbody.firstChild);
+
+        // Keep only last 50 entries
+        if (tbody.children.length > 50) {
+          tbody.removeChild(tbody.lastChild);
+        }
+
+        // Update Cowrie-specific metrics
+        updateCowrieMetrics(logEntry);
+      }
+
+      function updateCowrieMetrics(logEntry) {
+        // Update Cowrie-specific counters
+        const cowrieCounter = document.getElementById("cowrie-events-counter");
+        if (cowrieCounter) {
+          const currentCount = parseInt(cowrieCounter.textContent) || 0;
+          cowrieCounter.textContent = currentCount + 1;
+        }
+
+        // Update threat level if high threat
+        if (logEntry.threat_score > 70) {
+          const threatIndicator = document.getElementById("threat-level");
+          if (threatIndicator) {
+            threatIndicator.className = "badge bg-danger";
+            threatIndicator.textContent = "HIGH";
+          }
         }
       }
 
@@ -318,6 +377,46 @@
               <i class="fas fa-exclamation-triangle fa-2x text-danger mb-2"></i>
               <div class="metric-value" id="alerts">{{ stats.alerts }}</div>
               <div class="metric-label">Security Alerts</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Cowrie Honeypot Status Row -->
+      <div class="row mb-4">
+        <div class="col-md-3">
+          <div class="card status-card border-info">
+            <div class="card-body text-center">
+              <i class="fas fa-bug fa-2x text-info mb-2"></i>
+              <div class="metric-value" id="cowrie-events-counter">0</div>
+              <div class="metric-label">🐝 Cowrie Events</div>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="card status-card border-warning">
+            <div class="card-body text-center">
+              <i class="fas fa-user-secret fa-2x text-warning mb-2"></i>
+              <div class="metric-value" id="cowrie-sessions">0</div>
+              <div class="metric-label">Active Sessions</div>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="card status-card border-success">
+            <div class="card-body text-center">
+              <i class="fas fa-shield-alt fa-2x text-success mb-2"></i>
+              <div class="metric-value" id="cowrie-blocked">0</div>
+              <div class="metric-label">Blocked Attacks</div>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="card status-card border-primary">
+            <div class="card-body text-center">
+              <i class="fas fa-chart-line fa-2x text-primary mb-2"></i>
+              <div class="metric-value" id="cowrie-threat-avg">0</div>
+              <div class="metric-label">Avg Threat Score</div>
             </div>
           </div>
         </div>

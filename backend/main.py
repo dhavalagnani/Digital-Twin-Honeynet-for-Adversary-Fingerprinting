@@ -314,10 +314,65 @@ async def websocket_endpoint(websocket: WebSocket):
     
     try:
         while True:
-            # Keep connection alive
-            await websocket.receive_text()
+            # Keep connection alive and handle incoming messages
+            data = await websocket.receive_text()
+            
+            # Handle incoming messages from log forwarders
+            try:
+                message = json.loads(data)
+                await handle_websocket_message(message)
+            except json.JSONDecodeError:
+                # Not a JSON message, just keep connection alive
+                pass
+                
     except WebSocketDisconnect:
         websocket_connections.remove(websocket)
+
+async def handle_websocket_message(message: dict):
+    """Handle incoming WebSocket messages"""
+    try:
+        message_type = message.get('type')
+        
+        if message_type == 'cowrie_log':
+            # Handle Cowrie log message
+            log_entry = message.get('log', {})
+            
+            # Add to recent events
+            recent_events.append(log_entry)
+            
+            # Keep only recent events
+            if len(recent_events) > max_events:
+                recent_events.pop(0)
+            
+            # Update threat level
+            update_threat_level()
+            
+            # Update SSH sessions if applicable
+            if log_entry.get('source') == 'cowrie_ssh':
+                await update_ssh_sessions(log_entry)
+            
+            # Broadcast to all connected clients
+            await broadcast_to_websockets({
+                'type': 'cowrie_log_update',
+                'log': log_entry,
+                'stats': await get_system_stats()
+            })
+            
+            # Check for high threat events
+            if log_entry.get('threat_score', 0) > 70:
+                await broadcast_to_websockets({
+                    'type': 'attack_alert',
+                    'alert': {
+                        'description': f"High threat Cowrie activity: {log_entry.get('action')}",
+                        'source': log_entry.get('source'),
+                        'threat_score': log_entry.get('threat_score'),
+                        'timestamp': log_entry.get('timestamp'),
+                        'ip': log_entry.get('actor', {}).get('ip', 'unknown')
+                    }
+                })
+        
+    except Exception as e:
+        logger.error(f"Error handling WebSocket message: {e}")
 
 async def broadcast_to_websockets(message: dict):
     """Broadcast message to all connected WebSocket clients"""
